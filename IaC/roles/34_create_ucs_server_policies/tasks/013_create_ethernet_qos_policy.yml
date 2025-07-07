@@ -1,0 +1,58 @@
+---
+- name: Create Ethernet QoS Policies
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  block:
+    - name: Create Default Ethernet QoS Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/EthQosPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_default_ethernet_qos_policy }}'"
+        api_body: {
+          "Name": "{{ name_of_default_ethernet_qos_policy }}",
+          "Description": "{{ description_of_default_ethernet_qos_policy }}",
+          "Organization": {
+              "Moid": "{{ intersight_org.api_response.Moid }}"
+            },
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}],
+          
+          "Mtu": "{{ default_mtu }}",
+          "Cos": "{{ default_class_of_service }}",
+          "Burst": "{{ default_burst }}",
+          "Priority": "{{ default_priority }}",
+          "RateLimit": "{{ default_rate_limit }}",
+          "TrustHostCos": false
+        }
+        #state: present
+      register: default_ethernet_qos_policy
+
+    - name: Create Jumbo Ethernet QoS Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/EthQosPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_jumbo_ethernet_qos_policy }}'"
+        api_body: {
+          "Name": "{{ name_of_jumbo_ethernet_qos_policy }}",
+          "Description": "{{ description_of_jumbo_ethernet_qos_policy }}",
+          "Organization": {
+              "Moid": "{{ intersight_org.api_response.Moid }}"
+            },
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}],
+
+          "Mtu": "{{ jumbo_mtu }}",
+          "Cos": "{{ jumbo_class_of_service }}",
+          "Burst": "{{ jumbo_burst }}",
+          "Priority": "{{ jumbo_priority }}",
+          "RateLimit": "{{ jumbo_rate_limit }}",
+          "TrustHostCos": false
+        }
+        #state: present
+      register: jumbo_ethernet_qos_policy
+

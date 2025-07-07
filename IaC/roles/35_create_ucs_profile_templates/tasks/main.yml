@@ -1,0 +1,35 @@
+---
+- name: Create Profile Configuration Templates for Cisco UCS 
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info
+    resource_path: /organization/Organizations
+    query_params:
+      $filter: "Name eq '{{ org_name }}'"
+  register: intersight_org
+  delegate_to: localhost
+  tags: always
+  run_once: true
+
+# - name: Collect policy information for Service Profile Template
+#   ansible.builtin.include_tasks: gather_policy_info.yml
+
+- name: Create UCS Chassis Profile Template using Chassis Policies
+  ansible.builtin.include_tasks: 001_create_chassis_profile_template.yml
+
+- name: Create UCS Domain Profile Template using Domain Policies
+  ansible.builtin.include_tasks: 002_create_domain_profile_template.yml
+
+- name: Create OCP Control Server Profile Template using local boot
+  ansible.builtin.include_tasks: 005_create_local_ocp_control_server_profile_template.yml
+
+- name: Create OCP Worker Server Profile Template using local boot
+  ansible.builtin.include_tasks: 005_create_local_ocp_worker_server_profile_template.yml
+

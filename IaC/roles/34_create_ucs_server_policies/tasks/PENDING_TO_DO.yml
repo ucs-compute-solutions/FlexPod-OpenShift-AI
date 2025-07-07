@@ -1,0 +1,15 @@
+
+# [!!!] 1. Ethernet Adapter Policies - clean it up for both Linux and VMware
+
+# [!  ] 3. See if 16rxq 4G and 5G adapter policies into one using {{vic_type}}
+#       4. Add state:absent policies so they can be removed using --extra-vars from CLI
+# [!! ] 5. Look into including flag available in GUI to add VLANs automatically to FI uplinks
+# [!!!] 6. IPMI over LAN policy - how to specify encryption key of '00' or 40hex key if enabled
+
+
+
+# COMPLETED
+# [   ] 1. Verified that local user policy works (don't use "{{vault_}}")
+#       2. Changed adapater policies to auto generate name based on vic_type field (cleaner, shorter plays)
+#       3. Added separate IP blocks for  FI (Chassis Profile) vs. servers (Server Profiles)
+#       4. File bug on VLAN range issue 

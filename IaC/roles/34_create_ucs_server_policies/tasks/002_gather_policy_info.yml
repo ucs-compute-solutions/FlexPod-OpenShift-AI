@@ -1,0 +1,61 @@
+---
+# Gather various policy details to evaluate for existence of Boot Order policy, LAN 
+# Connectivty Policy, and SAN Connectivity Policy.
+#
+- name: Gather Boot Order Policy Details
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  block:
+    - name: Get FC Boot Order Policy Details
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /boot/PrecisionPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_fc_boot_order_policy }}'"
+
+      register:  fc_boot_order_policy
+      when: configure_fc_boot == 'true'
+
+    - name: Get iSCSI Boot Order Policy Details
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /boot/PrecisionPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_iscsi_boot_order_policy }}'"
+      register:  iscsi_boot_order_policy
+      when: configure_iscsi_boot == 'true' 
+
+    - name: Get FC LAN Connectivity Policy Details
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/LanConnectivityPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_fc_lan_connectivity_policy }}'"
+
+      register:  fc_lan_connectivity_policy
+      when: configure_fc_boot == 'true' 
+
+    - name: Get iSCSI LAN Connectivity Policy Details
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/LanConnectivityPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_iscsi_lan_connectivity_policy }}'"
+      register:  iscsi_lan_connectivity_policy
+      when: configure_iscsi_boot == 'true' 
+
+    - name: Get SAN Connectivity Policy Details
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/SanConnectivityPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_san_connectivity_policy }}'"
+
+      register:  san_connectivity_policy
+      when: configure_fc_boot == 'true' 

@@ -1,0 +1,138 @@
+---
+- name: Create FI-A, FI-B Port Policies
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key | default(omit) }}"
+      api_key_id: "{{ intersight_api_key_id | default(omit) }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure FI-A Port Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/PortPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_fi_a_port_policy }}'"
+        api_body: {
+          "Name": "{{ name_of_fi_a_port_policy }}",
+          "Description": "{{ description_of_fi_a_port_policy }}",
+          "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+          "DeviceModel": "{{ fi_device_model }}",
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: fi_a_port_policy
+
+    - name: Configure FI-B Port Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/PortPolicies
+        query_params:
+          $filter: "Name eq '{{ name_of_fi_b_port_policy }}'"
+        api_body: {
+          "Name": "{{ name_of_fi_b_port_policy }}",
+          "Description": "{{ description_of_fi_b_port_policy }}",
+          "Organization": {
+            "Moid": "{{ intersight_org.api_response.Moid }}"
+          },
+          "DeviceModel": "{{ fi_device_model }}",
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: fi_b_port_policy
+
+    - name: Set initial list
+      set_fact:
+        fi_a_uplink_port_list: []
+        fi_b_uplink_port_list: []
+        fi_a_server_port_list: []
+        fi_b_server_port_list: []
+
+    - name: Set FI-A Uplink Port List
+      set_fact:
+        fi_a_uplink_port_list: "{{ fi_a_uplink_port_list + [{'id': 'port' + item|string, 'PortId': item, 'SlotId': 1}] }}"
+      loop: "{{ fi_port_channels.fi_a.ports}}"
+
+    - name: Set FI-B Uplink Port list
+      set_fact:
+        fi_b_uplink_port_list: "{{ fi_b_uplink_port_list + [{'id': 'port' + item|string, 'PortId': item, 'SlotId': 1}] }}"
+      loop: "{{ fi_port_channels.fi_b.ports }}"
+
+    - name: Set FI-A Downstream Port List - Server Ports
+      set_fact:
+        fi_a_server_port_list: "{{ fi_a_server_port_list + [item] }}"
+      loop: "{{ fi_server_ports.fi_a.ports}}"
+
+    - name: Set FI-B Downstream Port list - Server Ports
+      set_fact:
+        fi_b_server_port_list: "{{ fi_b_server_port_list + [item] }}"
+      loop: "{{ fi_server_ports.fi_b.ports }}"
+    
+
+    - name: Debug FI-A Uplink Port List
+      debug:
+        var: fi_a_uplink_port_list
+
+    - name: Debug FI-B Uplink Port List
+      debug:
+        var: fi_b_uplink_port_list
+
+    - name: Debug FI-A Server Port List
+      debug:
+        var: fi_a_server_port_list
+
+    - name: Debug FI-B Server Port List
+      debug:
+        var: fi_b_server_port_list
+
+
+    - name: Configure FI-A and FI-B Port-Channel Uplinks to ToR switch
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/UplinkPcRoles
+        update_method: "post"
+        api_body: {
+            "AdminSpeed": "Auto",
+            "Fec": "Auto",
+            "LinkControlPolicy": "{{ link_control_policy.api_response.Moid }}",
+            "PcId": "{{ item.value.pc_id }}",
+            "PortPolicy": "{{ lookup('vars', item.key + '_port_policy').api_response.Moid }}",
+            "Ports": "{{ lookup('vars', item.key + '_uplink_port_list') }}"
+        }
+        state: present
+      loop: "{{ fi_port_channels | dict2items }}"
+      register: fi_port_channels_response
+
+    - name: Configure FI-A ports to downstream servers
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/ServerRoles
+        update_method: "post"
+        api_body: {
+            "AutoNegotiationDisabled": false,
+            "Fec": "Auto",
+            "PortId": "{{ item | int}}",
+            "PortPolicy": "{{ fi_a_port_policy.api_response.Moid }}",
+            "SlotId": 1
+        }
+        state: present
+      loop: "{{ fi_a_server_port_list }}"
+      register: fi_a_server_ports_response
+    
+    - name: Configure FI-B ports to downstream servers
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/ServerRoles
+        update_method: "post"
+        api_body: {
+            "AutoNegotiationDisabled": false,
+            "Fec": "Auto",
+            "PortId": "{{ item | int}}",
+            "PortPolicy": "{{ fi_b_port_policy.api_response.Moid }}",
+            "SlotId": 1
+        }
+        state: present
+      loop: "{{ fi_b_server_port_list }}"
+      register: fi_b_server_ports_response

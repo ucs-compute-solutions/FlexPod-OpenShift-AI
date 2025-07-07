@@ -1,0 +1,61 @@
+---
+# -------------------------------------------------------------------------------------
+#  Pre-requisites: Create Intersight Resource Group for FlashStack VSI cluster
+# -------------------------------------------------------------------------------------
+
+- name: Define anchor for Intersight API login info
+  ansible.builtin.set_fact:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      #state: "{{ state | default(omit) }}"
+  run_once: true
+
+- name: Create Intersight Resource Group and return Moid
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info
+    resource_path: /resource/Groups
+    query_params:
+      $filter: "Name eq '{{ resource_group_name }}'"
+    api_body: {
+      "Name": "{{ resource_group_name }}",
+      "Description": "{{ resource_group_description }}"
+    }
+    state: present
+  register: resource_group
+  run_once: true
+  delegate_to: local_host
+  tags:
+    - intersight_resource_group
+    # - never, debug, always
+
+- name: Query for an existing Resource Group and get Moid
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info
+    resource_path: /resource/Groups
+    query_params:
+      $filter: "Name eq '{{ resource_group_name }}'"
+  register: resource_group
+  run_once: true
+  delegate_to: local_host
+  tags:
+    - intersight_resource_group
+    - never
+    # - never, always, debug
+
+- name: Moid for Resource Group
+  ansible.builtin.set_fact:
+    resource_group_moid: "{{ resource_group.api_response.Moid }}"
+  run_once: true
+  delegate_to: local_host
+
+- name: Print status of 'Create Resource' policy
+  ansible.builtin.debug:
+    msg: "Created Resource Group '{{ resource_group_name }}' with Moid: '{{ resource_group_moid }}'"
+  tags:
+    - intersight_resource_group
+    # - never, always, debug
+
+# -----------------------------------------------------------------------------------------

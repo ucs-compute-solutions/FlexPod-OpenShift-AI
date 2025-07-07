@@ -1,0 +1,29 @@
+---
+- name: Create Link Control Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure Link Control Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/LinkControlPolicies
+        query_params:
+              $filter: "Name eq '{{ name_of_link_control_policy }}'"
+        api_body: {
+          "Name": "{{ name_of_link_control_policy }}",
+          "Description": "{{ description_of_link_control_policy }}",
+          "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+          Tags: [{Key: "configmode", Value: "ansible"},{Key: "prefix", Value: "{{ prefix }}"}],
+          "UdldSettings": {
+            "AdminState": "Enabled",
+            "Mode": "normal"
+          }
+        }
+        state: present
+      register: link_control_policy

@@ -1,0 +1,124 @@
+---
+- name: Create vNIC Templates for Linux and VMware Hosts
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  # -------------------------------------------------------------------------------------
+  #     vNIC Templates for OpenShift Control Nodes
+  # -------------------------------------------------------------------------------------
+
+  block: 
+    - name: Get organization Moid 
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /organization/Organizations
+        query_params:
+          $filter: "Name eq '{{ org_name }}'"
+      register: intersight_org
+      delegate_to: localhost
+      tags: always
+      run_once: true
+
+    - name: Print intersight org Moid 
+      debug:
+        msg: "Output of intersight_org: '{{ intersight_org.api_response.Moid }}'"
+      
+    - name: Ensure ocp_control_vnic_template_moids is defined
+      set_fact:
+        ocp_control_vnic_templates_moids: []
+
+
+    - name: Debug variables before Configure vNIC Templates task
+      debug:
+        msg: 
+          - "linux1_default_ethernet_adapter_policy: {{ linux_default_ethernet_adapter_policy }}"
+          - "ocp_control_vnic_templates_list: {{ ocp_control_vnic_templates_list }}"
+
+    - name: Configure vNIC Templates for OpenShift Control Nodes
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/VnicTemplates
+        query_params:
+          $filter: "Name eq '{{ item.value.name }}'"
+        api_body:
+          Name: "{{ item.value.name }}"
+          Description: "{{ item.value.description }}"
+          Organization:
+            Moid: "{{ intersight_org.api_response.Moid }}"
+          Tags:
+            - Key: "Provisioned by:"
+              Value: "Intersight-Ansible"
+            - Key: "Project:"
+              Value: "{{ prefix }}"
+          Cdn:
+            Source: "vnic"
+          EnableOverride: false
+          EthAdapterPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_adapter_policy].api_response.Moid }}"
+          EthQosPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_qos_policy].api_response.Moid }}"
+          FabricEthNetworkControlPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_network_control_policy].api_response.Moid }}"
+          FabricEthNetworkGroupPolicy: 
+            - "{{ hostvars[inventory_hostname][item.value.ethernet_network_group_policy].api_response.Moid }}"
+          FailoverEnabled: "{{ item.value.failover_enabled }}"
+          MacPool: "{{ hostvars[inventory_hostname][item.value.mac_pool].api_response.Moid }}"
+          SwitchId: "{{ item.value.switch_id }}"
+      loop: "{{ ocp_control_vnic_templates_list | dict2items }}"
+      register: ocp_control_vnic_templates
+      when: configure_openshift == 'true'
+    
+    - name: Extract Moid from vNIC Templates
+      set_fact:
+        ocp_control_vnic_templates_moids: "{{ ocp_control_vnic_templates_moids + [item.api_response.Moid] }}"
+      loop: "{{ ocp_control_vnic_templates.results | default([]) }}"
+      when: item.api_response is defined
+
+    - name: Display vNIC Template Moids
+      debug:
+        msg: "{{ ocp_control_vnic_templates_moids }}"
+
+    - name: Debug ocp_control_vnic_templates results
+      debug:
+        var: ocp_control_vnic_templates.results
+      when: configure_openshift == true
+
+    # -----------------------------------------------------------------------------------------
+    #     vNIC Templates for OpenShift Worker Nodes
+    # -----------------------------------------------------------------------------------------
+
+    - name: Configure vNIC Templates for OpenShift Worker Nodes
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /vnic/VnicTemplates
+        query_params:
+          $filter: "Name eq '{{ item.value.name }}'"
+        api_body:
+          Name: "{{ item.value.name }}"
+          Description: "{{ item.value.description }}"
+          Organization:
+            Moid: "{{ intersight_org.api_response.Moid }}"
+          Tags:
+            - Key: "Provisioned by:"
+              Value: "Intersight-Ansible"
+            - Key: "Project:"
+              Value: "{{ prefix }}"
+          Cdn:
+            Source: "vnic"
+          EnableOverride: false
+          EthAdapterPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_adapter_policy].api_response.Moid }}"
+          EthQosPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_qos_policy].api_response.Moid }}"
+          FabricEthNetworkControlPolicy: "{{ hostvars[inventory_hostname][item.value.ethernet_network_control_policy].api_response.Moid }}"
+          FabricEthNetworkGroupPolicy:
+            - "{{ hostvars[inventory_hostname][item.value.ethernet_network_group_policy].api_response.Moid }}"
+          FailoverEnabled: "{{ item.value.failover_enabled }}"
+          MacPool: "{{ hostvars[inventory_hostname][item.value.mac_pool].api_response.Moid }}"
+          SwitchId: "{{ item.value.switch_id }}"
+      loop: "{{ ocp_worker_vnic_templates_list | dict2items }}"
+      register: ocp_worker_vnic_templates
+      when: configure_openshift == 'true'
+
+    - debug: msg="{{item}}"
+      loop: "{{ocp_worker_vnic_templates.results}}"

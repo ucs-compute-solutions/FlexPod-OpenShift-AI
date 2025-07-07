@@ -1,0 +1,63 @@
+---
+- name: Create Server Profile Template using local boot
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  block:
+    - name: IAM Endpoint - Local user policy
+      debug:
+        msg: "IAM ENDPOINT LOCAL USER POLICY '{{local_user_policy.results[0]}}'"
+
+    - name: Configure UCS Server Profile Template for OCP Control Nodes
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /server/ProfileTemplates
+        query_params:
+          $filter: "Name eq '{{ name_of_local_ocp_control_server_profile_template }}'"
+        api_body:
+          Name: "{{ name_of_local_ocp_control_server_profile_template }}"
+          Description: "{{ description_of_local_ocp_control_server_profile_template }}"
+          Organization:
+            Moid: "{{ intersight_org.api_response.Moid }}"
+          PolicyBucket:
+            - Moid: "{{ bios_policy.api_response.Moid }}"
+              ObjectType: "bios.Policy"
+            - Moid: "{{ local_boot_order_policy.api_response.Moid }}"
+              ObjectType: "boot.PrecisionPolicy"
+            - Moid: "{{ firmware_policy.api_response.Moid }}"
+              ObjectType: "firmware.Policy"
+            - Moid: "{{ power_policy.api_response.Moid }}"
+              ObjectType: "power.Policy"
+            - Moid: "{{ thermal_policy.api_response.Moid }}"
+              ObjectType: "thermal.Policy"
+            - Moid: "{{ vmedia_policy.api_response.Moid }}"
+              ObjectType: "vmedia.Policy"
+            - Moid: "{{ imc_access_policy.api_response.Moid }}"
+              ObjectType: "access.Policy"
+            - Moid: "{{ ipmi_over_lan_policy.api_response.Moid }}"
+              ObjectType: "ipmioverlan.Policy"
+            - Moid: "{{ snmp_policy.api_response.Moid }}"
+              ObjectType: "snmp.Policy"
+            - Moid: "{{ syslog_policy.api_response.Moid }}"
+              ObjectType: "syslog.Policy"
+            - Moid: "{{ vkvm_policy.api_response.Moid }}"
+              ObjectType: "kvm.Policy"
+            - Moid: "{{ local_user_policy.results[0].api_response.EndPointUserPolicy.Moid }}"
+              ObjectType: "iam.EndPointUserPolicy"
+            - Moid: "{{ storage_policy.api_response.Moid }}"
+              ObjectType: "storage.StoragePolicy"
+            - Moid: "{{ ocp_control_lan_connectivity_policy.api_response.Moid }}"
+              ObjectType: "vnic.LanConnectivityPolicy"
+          TargetPlatform: "FIAttached"
+          Tags:
+            - Key: "Provisioned by:"
+              Value: "Intersight-Ansible"
+            - Key: "Project:"
+              Value: "{{ prefix }}"
+        state: present
+      register: local_ocp_control_server_profile_template

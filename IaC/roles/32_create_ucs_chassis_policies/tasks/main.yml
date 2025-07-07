@@ -1,0 +1,34 @@
+---
+- name: Create UCS-X Chassis Policies
+  vars:
+    api_info: &api_info_org_moid
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info_org_moid
+    resource_path: /organization/Organizations
+    query_params:
+      $filter: "Name eq '{{ org_name }}'"
+  register: intersight_org
+  delegate_to: localhost
+  tags: always
+  run_once: true
+
+- name: Collect information about various pools for creating policies here
+  ansible.builtin.include_tasks: 001_gather_pool_info.yml
+
+- name: Create IMC Access Policy
+  ansible.builtin.include_tasks: 002_create_imc_access_policy.yml
+
+- name: Create Power Policy
+  ansible.builtin.include_tasks: 003_create_power_policy.yml
+
+- name: Create SNMP Policy
+  ansible.builtin.include_tasks: 004_create_snmp_policy.yml
+
+- name: Create Thermal Policy
+  ansible.builtin.include_tasks: 005_create_thermal_policy.yml

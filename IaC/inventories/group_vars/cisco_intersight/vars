@@ -1,0 +1,30 @@
+---
+# ##############################################################################
+#
+#   Cisco Intersight Configuration Parameters
+#
+# ##############################################################################
+
+
+# !!! Sensitive Data should be encrypted using Ansible Vault. 
+# Variables should be put in vault file and use name that starts with 'vault_'
+
+# Enter Intersight API Key ID and the location of the SecretKey file 
+intersight_api_key_description: "FPB"
+intersight_api_private_key: "{{ vault_intersight_api_private_key }}"
+intersight_api_key_id: "{{ vault_intersight_api_key_id }}"
+# intersight_validate_certs: "false"
+
+# Specify a Resource Group Name for infrastructure resources 
+resource_group_name: "ANS-default"
+resource_group_description: "FlexPod OpenShift AI Baremetal CVD Resources"
+
+# Specify an Organization Name for infrastructure resources 
+organization_name: "ANS-ORG"
+organization_description: "FlexPod OpenShift AI Baremetal CVD Organization"
+org_name: "{{ organization_name }}"
+
+# To claim a device in Intersight, specify Claim Code and Device ID 
+device_id: "{{ vault_device_id }}"
+claim_code: "{{ vault_claim_code }}"
+

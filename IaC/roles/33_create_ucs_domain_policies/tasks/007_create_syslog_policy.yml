@@ -1,0 +1,31 @@
+---
+- name: Create Syslog Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure Syslog Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /syslog/Policies
+        update_method: "post"
+        query_params:
+          $filter: "Name eq '{{ name_of_syslog_policy }}'"
+        api_body: {
+            "Name": "{{ name_of_syslog_policy }}",
+            "Description": "{{ description_of_syslog_policy }}",
+            "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+            Tags: [{Key: "configmode", Value: "ansible"},{Key: "prefix", Value: "{{ prefix }}"}], 
+            "LocalClients":[{"ObjectType":"syslog.LocalFileLoggingClient","MinSeverity":"warning"}],
+            "RemoteClients":[{"Type":"syslog.RemoteLoggingClient","Enabled":true,"ObjectType":"syslog.RemoteLoggingClient","Hostname":"1.1.1.1","Port":514,"Protocol":"udp","MinSeverity":"warning"},{"Type":"syslog.RemoteLoggingClient","Enabled":false,"ObjectType":"syslog.RemoteLoggingClient","Hostname":"1.1.1.2","Port":514,"Protocol":"udp","MinSeverity":"warning"}]       
+        }
+        state: present
+      register: syslog_policy
+
+    
+   

@@ -1,0 +1,700 @@
+---
+
+# ########################################################################################################################
+#
+#      Configuration Parameters for an IMM managed Cisco UCS Domain with UCS-X Chassis and servers
+#
+# ########################################################################################################################
+
+# GLOBAL PARAMETERS
+#
+# Prefix represents the project id added to the pool/policy/profile names to identify and pool info
+# Example Project IDs for CVDs: FSVa, FSBa, FPVa, FPBa, (Infra: Rack-Ia); 'a' for Ansible
+prefix                : "ANS"
+
+# Sub-Prefix (ocp,vmw) represents the OS stack 
+# Currently project ID uses V and B for VMware and Baremetal
+sub_prefix            : "ocp"
+
+# OS Type - linux, vmware
+os_type               : "linux"
+
+# Server CPU Type - Intel or AMD
+server_cpu_type       : "Intel"
+
+# Server CPU Model - Intel (M5, M6, M7) or AMD
+server_cpu_model      : "M7"
+
+# VIC Type - 4th Gen VICs (4G) or 5th Gen VICs (5G)
+# Also add 4G or 5G to Server Profile Template Name - REVIEW!!!
+# 4G VIC MODEL: UCSX-V4-Q25GML
+vic_type              : "5G"
+
+# Cisco UCS FI
+fi_model              : "6536"
+fi_a_sn               : "FDO27291EME"
+fi_b_sn               : "FDO27300E91"
+
+# Cisco UCS-X Chassis
+chassis_sn            : "FOX2737P2KE"     # AC10-UCS-FI-6536-1
+# chassis_sn            : "FOX2629P090"   # AC10-UCS-FI-6536-2
+
+# OS stack
+configure_openshift   : "true"
+configure_vmware      : "false"
+
+# Boot Options (LB - Local Boot, iSCSI, FC )
+boot_method: "LB"
+
+# Configure Local Boot policies and profiles only when this value is true
+configure_local_boot  : "true"   # when using local boot
+
+# Configure iSCSI policies and profiles only when this value is true
+configure_iscsi_boot  : "false"   # when using iSCSI boot
+configure_iscsi       : "true"    # when using iSCSI storage but not iSCSI SAN boot
+configure_nvme_tcp    : "true"    # when using NVMe-TCP storage but not for booting
+
+# Configure Fibre Channel policies and profiles only when this value is true
+configure_fc_boot     : "false"   # when using FC boot
+configure_fc          : "false"   # when using FC storage but not FC SAN boot
+
+# Configure Fibre Channel NVMe vHBAs; only when this value true
+configure_fc_nvme     : "false"
+
+
+# ########################################################################################################################
+#
+#     Parameters - Create Pools for UCS Server Policies
+#
+# ########################################################################################################################
+
+# IP Address Pool for In-Band (IB) Management Access 
+#
+name_of_ip_pool_for_ib_management_access: "{{ prefix }}-IB-MGMT-IP_Pool"
+description_of_ip_pool_for_ib_mgmt_access: "IP Pool for In-Band Mgmt access"
+fi_ip_pool_start_for_ib_management_access: 10.120.1.128
+fi_size_of_ip_pool_for_ib_management_access: 2
+server_ip_pool_start_for_ib_management_access: 10.120.1.131
+server_size_of_ip_pool_for_ib_management_access: 9
+gateway_ib_mgmt: 10.120.1.254
+netmask_ib_mgmt: 255.255.255.0
+primary_dns_ib_mgmt: 10.120.1.240
+secondary_dns_ib_mgmt: 172.20.10.53
+
+# IP Address Pool for Out-of-Band (OOB) Management Access 
+#
+name_of_ip_pool_for_oob_management_access: "FPB-OOB-MGMT-IP_Pool"
+description_of_ip_pool_for_oob_mgmt_access: "IP Pool for Out-of-Band Mgmt access"
+ip_pool_start_for_oob_management_access: 10.120.0.231
+size_of_ip_pool_for_oob_management_access: 9
+gateway_oob_mgmt: 10.120.0.254
+netmask_oob_mgmt: 255.255.255.0
+primary_dns_oob_mgmt: 172.20.4.53
+secondary_dns_oob_mgmt: 172.20.4.54
+
+# iSCSI Storage Access 
+#
+## IP Pool - iSCSI-A; Use 0.0.0.0 as gateway address if no gateway is present
+name_of_ip_pool_for_iscsi_a: "{{ prefix }}-iSCSI-A-IP_Pool"
+description_of_ip_pool_for_iscsi_a: "IP Pool used by iSCSI on FI-A"
+ip_pool_start_iscsi_a: "192.168.10.101"
+size_of_ip_pool_iscsi_a: 8
+gateway_iscsi_a: "0.0.0.0"
+netmask_iscsi_a: "255.255.255.0"
+#
+## IP Pool - iSCSI-B; Use 0.0.0.0 as gateway address if no gateway is present
+name_of_ip_pool_for_iscsi_b: "{{ prefix }}-iSCSI-B-IP_Pool"
+description_of_ip_pool_for_iscsi_b: "IP Pool used by iSCSI on FI-B"
+ip_pool_start_iscsi_b: "192.168.20.101" 
+size_of_ip_pool_iscsi_b: 8
+gateway_iscsi_b: "0.0.0.0"
+netmask_iscsi_b: "255.255.255.0"
+
+## IQN Pool
+name_of_iqn_pool: "{{ prefix }}-IQN_Pool"
+description_of_iqn_pool: "IQN Pool for iSCSI Configuration"
+prefix_for_iqn: "iqn.2010-11.com.flexpod"
+suffix_for_iqn: "ac10-ucs-host"
+iqn_start: 01
+size_of_iqn_pool: 32
+
+# MAC Address Pools for Fabric-A and Fabric-B
+#
+# FI-A MAC Address Pool
+name_of_mac_pool_on_fi_a: "{{ prefix }}-Fabric-A-MAC_Pool"
+description_of_mac_pool_on_fi_a: "MAC Pool for FI-A"
+mac_pool_start_on_fi_a: "00:B4:AC:10:0A:00"
+size_of_mac_pool_on_fi_a: 128   # cannot modify an existing pool size 
+#
+# FI-B MAC Address Pool
+name_of_mac_pool_on_fi_b: "{{ prefix}}-Fabric-B-MAC_Pool"
+description_of_mac_pool_on_fi_b: "MAC Pool for FI-B"
+mac_pool_start_on_fi_b: "00:B4:AC:10:0B:00"
+size_of_mac_pool_on_fi_b: 128   # cannot modify an existing pool size 
+
+# UUID Pool
+# If rack has multiple systems, take care to avoid conflicts
+name_of_uuid_pool: "{{ prefix }}-UUID_Pool"
+description_of_uuid_pool: "UUID Pool for Server Profiles"
+uuid_prefix: "AC101000-0000-0001"
+uuid_size: 50
+uuid_from: "AC10-100000001001"
+
+# IGNORE for this CVD
+# FC storage access - when configure_fc or configure_fc_boot == true
+#
+# WWNN Pool
+name_of_wwnn_pool: "{{ prefix }}-WWNN_Pool"
+description_of_wwnn_pool: "WWNN Pool for FC Hosts"
+wwnn_pool_start: "20:00:00:B4:AC:10:00:00"
+wwnn_pool_size: 256
+#
+# WWPN Pool
+#
+# For FI-A
+name_of_wwpn_pool_san_a: "{{ prefix }}-Fabric-A-WWPN_Pool"
+description_of_wwpn_pool_san_a: "WWPN Pool for SAN-A"
+wwpn_pool_start_on_san_a: "20:00:00:B4:AC:10:0A:00"
+wwpn_pool_size_on_san_a: 256
+#
+# For FI-B
+name_of_wwpn_pool_san_b: "{{ prefix }}-Fabric-B-WWPN_Pool"
+description_of_wwpn_pool_san_b: "WWPN Pool for SAN-B"
+wwpn_pool_start_on_san_b: "20:00:00:B4:AC:10:0B:00"
+wwpn_pool_size_on_san_b: 256
+
+
+# ########################################################################################################################
+#
+#      Parameters: Create UCS-X Chassis Policies
+#      (IMC Access, Power, SNMP and Thermal)
+#
+# ########################################################################################################################
+
+# IMC Access Policy: Enables KVM Access via in-band management (out-of-band also supported)
+#
+name_of_imc_access_policy           : "{{ prefix }}-IMC-Access_Policy"
+description_of_imc_access_policy    : "IMC Access Policy for KVM Access"
+ib_vlan_for_cimc_access             : "1201"   #Same as IB-MGMT VLAN
+
+# Power Policy
+name_of_power_policy                : "{{ prefix }}-Power_Policy"
+description_of_power_policy         : "Power Policy"
+
+# SNMP Policy
+name_of_snmp_policy                 : "{{ prefix }}-SNMP-Policy"
+description_of_snmp_policy          : "SNMP Policy"
+configure_snmpv3                    : true 
+snmp_user_name                      : "snmpadmin"
+snmp_auth_password                  : "{{ vault_snmp_password }}"
+snmp_priv_password                  : "{{ vault_snmp_password }}"
+snmp_contact                        : "snmp-admin@fpb.local"
+snmp_location                       : "Cisco RTP Building 4, Lab 141A, AC10"
+
+# Thermal Policy
+name_of_thermal_policy              : "{{ prefix }}-Thermal_Policy"
+description_of_thermal_policy       : "Thermal Policy"
+
+
+# ########################################################################################################################
+#
+#      Parameters: Create UCS FI Domain Policies
+#      (VLAN Multicast, FI VLAN, FI Port, NTP, Timezone, System QoS,
+#      Switch Contol, Syslog, and Network Connectivity)
+#
+# ########################################################################################################################
+
+# FI VLAN Policy parameters
+#
+# VLAN Multicast Policy
+name_of_vlan_multicast_policy           : "{{ prefix }}-VLAN-MCAST_Policy"
+description_of_vlan_multicast_policy    : "VLAN Multicast Policy"
+
+# FI VLAN Policy
+name_of_fi_vlan_policy                  : "{{ prefix }}-VLAN_Policy"
+description_of_fi_vlan_policy           : "FI VLAN Policy"
+
+# Enable VLANs on FI Uplinks 
+fi_vlan_list:
+  - name: "Native_VLAN"
+    id: 2
+    native_vlan: True
+  - name: "{{ prefix }}-IB-MGMT_VLAN"  #BMC/CIMC
+    id: 1201
+    native_vlan: False
+  - name: "{{ prefix }}-CLUSTER-MGMT_VLAN"
+    id: 1202
+    native_vlan: False
+  - name: "{{ prefix }}-iSCSI-A_VLAN"
+    id: 3015
+    native_vlan: False
+  - name: "{{ prefix }}-iSCSI-B_VLAN"
+    id: 3025
+    native_vlan: False
+  - name: "{{ prefix }}-NVMe-TCP-A_VLAN"
+    id: 3035
+    native_vlan: False
+  - name: "{{ prefix }}-NVMe-TCP-B_VLAN"
+    id: 3045
+    native_vlan: False
+  - name: "{{ prefix }}-NFS_VLAN"
+    id: 3055
+    native_vlan: False
+  - name: "{{ prefix }}-S3-OBJ_VLAN"
+    id: 1209
+    native_vlan: False
+
+# FI Port Policy Parameters
+
+# Link Control Policy
+name_of_link_control_policy           : "{{ prefix }}-Link-Control_Policy"
+description_of_link_control_policy    : "Link Control Policy"
+
+# FI Port Policies
+fi_device_model                       : "UCS-FI-{{fi_model}}"
+name_of_fi_a_port_policy              : "{{ prefix }}-FI-A-PORT_Policy"
+description_of_fi_a_port_policy       : "FI-A Port Policy"
+name_of_fi_b_port_policy              : "{{ prefix }}-FI-B-PORT_Policy"
+description_of_fi_b_port_policy       : "FI-B Port Policy"
+
+# FI Uplink Port Channels
+fi_port_channels: 
+  fi_a:
+    pc_id: 11
+    ports: 
+      - 31
+      - 32
+  fi_b:
+    pc_id: 12
+    ports: 
+      - 31
+      - 32
+
+# FI Downstream Server Ports
+fi_server_ports:
+  fi_a:
+    ports:
+      - 1
+      - 2
+      - 3
+      - 4
+  fi_b:
+    ports:
+      - 1
+      - 2
+      - 3
+      - 4
+
+
+# NTP
+name_of_ntp_policy                          : "{{ prefix }}-NTP_Policy"
+description_of_ntp_policy                   : "NTP Policy"
+ntp_servers:
+  - "172.20.10.120"
+  - "172.20.10.118"
+
+# TIMEZONE
+ucs_timezone                                : "America/New_York"  
+
+# SYSTEM QOS
+name_of_system_qos_policy                   : "{{ prefix }}-System-QoS_Policy"
+description_of_system_qos_policy            : "System-QoS Policy"
+
+# SWITCH CONTROL
+name_of_switch_control_policy               : "{{ prefix }}-Switch-Control_Policy"
+description_of_switch_control_policy        : "Switch-Control Policy"
+
+# SYSLOG
+name_of_syslog_policy                       : "{{ prefix }}-SYSLOG_Policy"
+description_of_syslog_policy                : "SYSLOG Policy"
+
+# NETWORK CONNECTIVITY POLICY
+name_of_network_connectivity_policy         : "{{ prefix }}-Network-Connectivity_Policy"
+description_of_network_connectivity_policy  : "Network-Connectivity Policy"
+
+dns_servers:
+  - "172.20.4.53"
+  - "172.20.4.54"
+
+
+# ########################################################################################################################
+#
+#      Parameters: Create UCS Server Policies
+#
+# ########################################################################################################################
+
+# --------------------------------------------------------------------------------------------------------
+#     BIOS Policy 
+# --------------------------------------------------------------------------------------------------------
+
+name_of_bios_policy: "{{ prefix }}-{{ server_cpu_type }}-{{server_cpu_model}}-BIOS_Policy"
+description_of_bios_policy : "Server BIOS Policy for {{ server_cpu_type }}{{ server_cpu_model }} Servers"
+
+# --------------------------------------------------------------------------------------------------------
+#     KVM Access Policy - Enables Tunneled KVM Server Access
+# --------------------------------------------------------------------------------------------------------
+
+# To enable Tunneled KVM on Intersight account, go to Settings > Security and Privacy 
+# 
+name_of_vkvm_policy                  : "{{ prefix }}-vKVM_Policy"
+description_of_vkvm_policy           : "KVM Policy to enable/disable Tunneled KVM"
+enable_tunneled_kvm                  : "true"
+
+# --------------------------------------------------------------------------------------------------------
+#     Virtual Media Policy to mount ISO files using KVM for OpenShift 
+# --------------------------------------------------------------------------------------------------------
+
+name_of_vmedia_policy               : "{{ prefix }}-vMedia_Policy"
+description_of_vmedia_policy        : "vMedia Policy to enable KVM mounted DVDs"
+
+# NOTE: Using Assisted Installer-Intersight integration from Redhat Hybrid Cloud Console
+# Integration will take care of configuring the following
+vmedia_policy_vars:
+  name                              : "{{ prefix }}-vMedia_Policy"
+  description                       : "vMedia Policy"
+  mount_type                        : "http"
+  mount_options                     : ""
+  volume                            : "HTTP-ISO"
+  remote_hostname                   : "10.120.1.225"
+  remote_path                       : "iso"
+  remote_file                       : "discovery_image_xyz.iso"
+  username                          : "asharma"
+  password                          : "{{vault_http_server_password}}"
+
+# --------------------------------------------------------------------------------------------------------
+#     IPMI over LAN Policy 
+# --------------------------------------------------------------------------------------------------------
+
+name_of_ipmi_policy                 : "{{ prefix }}-IPMI-Over-LAN_Policy"
+description_of_ipmi_policy          : "IPMI over LAN Policy"
+# Encyrption: The encryption key to use for IPMI communication. 
+# It should have an even number of hexadecimal characters and 
+# not exceed 40 characters. Use “00” to disable encryption key use. 
+# This configuration is supported by all Standalone C-Series servers. 
+# FI-attached C-Series servers with firmware at minimum of 4.2.3a support this 
+# configuration. B/X-Series servers with firmware at minimum of 5.1.0.x support this 
+# configuration. IPMI commands using this key should append zeroes to the key to achieve 
+# a length of 40 characters.
+encryption_key                      : 00    # disables encryption
+
+# --------------------------------------------------------------------------------------------------------
+#     Local User Policy to enable KVM and IPMI Access
+# --------------------------------------------------------------------------------------------------------
+
+name_of_local_user_policy: "{{ prefix }}-Local-User_Policy"
+description_of_local_user_policy: "Local User Policy"
+local_users_list:
+  - username: ac10-admin
+    enable: true
+    role: admin     # should match ipmi privelege level
+    password: "{{ vault_ac10_admin_password }}"
+  - username: admin
+    enable: true
+    role: admin # role user is not supported for blade servers
+    password: "{{vault_admin_password }}"
+
+# --------------------------------------------------------------------------------------------------------  
+#     Ethernet QoS Policy 
+# --------------------------------------------------------------------------------------------------------
+
+# Best Effort QoS Policy - Default MTU
+# QoS values can be updated in roles/create_server_policies/defaults/main.yml
+#
+name_of_default_ethernet_qos_policy          : "{{ prefix }}-Default-Ethernet-QoS_Policy"
+description_of_default_ethernet_qos_policy   : "Default/Best-Effort Ethernet QoS Policy"
+default_mtu                                  : 1500
+default_class_of_service                     : 0
+default_burst                                : 10240
+default_priority                             : "Best Effort"
+default_rate_limit                           : 0
+
+# Best Effort QoS Policy - Jumbo MTU
+# Set MTU to 9000 for Best Effort QoS Policy
+# 
+name_of_jumbo_ethernet_qos_policy            : "{{ prefix }}-Jumbo-Ethernet-QoS_Policy"
+description_of_jumbo_ethernet_qos_policy     : "Ethernet QoS Policy with MTU = 9000"
+jumbo_mtu                                    : 9000
+jumbo_class_of_service                       : 0
+jumbo_burst                                  : 10240
+jumbo_priority                               : "Best Effort"
+jumbo_rate_limit                             : 0
+
+# --------------------------------------------------------------------------------------------------------
+#     Ethernet Network Control Policies for CDP and LLDP
+# --------------------------------------------------------------------------------------------------------
+
+name_of_ethernet_network_control_policy           : "{{ prefix }}-Ethernet-Network-Control_Policy"
+description_of_ethernet_network_control_policy    : "Ethernet Network Control Policies for CDP and LLDP"
+
+# --------------------------------------------------------------------------------------------------------
+#     Ethernet Adapter Policies
+# --------------------------------------------------------------------------------------------------------
+# See Defaults in Ansible Role: Create Server Policies for additional info 
+#
+# Linux (also for OpenShift)
+#
+# Default Linux Ethernet Adapter Policy
+name_of_linux_default_ethernet_adapter_policy                   : "{{ prefix }}-Linux-Default-Ethernet-Adapter_Policy"
+description_of_linux_default_ethernet_adapter_policy            : "Linux Default Ethernet Adapter Policy"
+#
+# 16 RX Queues VIC Specific Linux Ethernet Adapter Policy 
+name_of_linux_16rxq_ethernet_adapter_policy                     : "{{ prefix }}-Linux-RX16Q{{vic_type}}-Ethernet-Adapter_Policy"
+description_of_linux_16rxq_ethernet_adapter_policy              : "Linux 16 RX Queues, {{vic_type}} VIC Linux Ethernet Adapter Policy"
+
+# NOT USED IN THIS CVD
+# VMware 
+# 
+# Default VMware Ethernet Adapter Policy
+name_of_vmware_default_ethernet_adapter_policy                  : "{{ prefix }}-VMware-Default-Ethernet-Adapter_Policy"
+description_of_vmware_default_ethernet_adapter_policy           : "VMware Default Ethernet Adapter Policy"
+# High Traffic Ethernet Adapter Policy
+name_of_hightrf_ethernet_adapter_policy                         : "{{ prefix }}-HighTrf-Ethernet-Adapter_Policy"
+description_of_hightrf_ethernet_adapter_policy                  : "VMware High Traffic Ethernet Adapter Policy"
+# 16 RX Queues VIC Specific Ethernet Adapter Policy
+name_of_vmware_16rxq_ethernet_adapter_policy                    : "{{ prefix }}--VMware-RX16Q{{ vic_type }}-Ethernet-Adapter_Policy"
+description_of_vmware_16rxq_ethernet_adapter_policy             : "VMware 16 RX Queues, {{vic_type}} VIC Ethernet Adapter Policy"
+
+
+# --------------------------------------------------------------------------------------------------------
+# Ethernet Network Group (ENG) Policies - specifies VLANs allowed on a given vNIC
+# --------------------------------------------------------------------------------------------------------
+
+# OpenShift IB Management VLANs for Power Management (BMC/Provisioning Network)
+name_of_ib_mgmt_eng_policy                      : "{{ prefix }}-IB-Mgmt-ENG_Policy"
+description_of_ib_mgmt_eng_policy               : "Ethernet Network Group(ENG) Policy for In-Band Management"
+native_vlan_for_ib_mgmt_vnic                    : 1201
+allowed_vlans_for_ib_mgmt_vnic                  : 1201
+
+# OpenShift Cluster Management VLANs (OpenShift Machine/Pod networks)
+name_of_cluster_mgmt_eng_policy                 : "{{ prefix }}-Cluster-Mgmt-ENG_Policy"
+description_of_cluster_mgmt_eng_policy          : "Ethernet Network Group(ENG) Policy for OpenShift Cluster Management"
+native_vlan_for_cluster_mgmt_vnic               : 1202
+allowed_vlans_for_cluster_mgmt_vnic             : 1202
+
+# Ethernet Network Group Policies for iSCSI interfaces are only required when (configure_iscsi==true) 
+#
+# Storage Data VLANs for IP/Ethernet based block storage (iSCSI, NVMe-TCP)
+# ---- iSCSI VLAN is untagged while NVMe VLAN is tagged on the same trunk
+name_of_iscsi_a_eng_policy                      : "{{ prefix }}-iSCSI-A-ENG_Policy"
+description_of_iscsi_a_eng_policy               : "Ethernet Network Group Policy(ENG) for iSCSI-A vNIC"
+native_vlan_for_iscsi_a_vnic                    : 3015
+allowed_vlans_for_iscsi_a_vnic                  : 3015,3035
+#
+# Storage Data VLANs for IP/Ethernet based block storage (iSCSI, NVMe-TCP)
+# ---- iSCSI VLAN is untagged while NVMe VLAN is tagged on the same trunk
+name_of_iscsi_b_eng_policy                      : "{{ prefix }}-iSCSI-B-ENG_Policy"
+description_of_iscsi_b_eng_policy               : "Ethernet Network Group Policy(ENG) for iSCSI-B vNIC"
+native_vlan_for_iscsi_b_vnic                    : 3025
+allowed_vlans_for_iscsi_b_vnic                  : 3025,3045
+#
+# Storage Data VLANs for IP based File Storage (NFS)
+name_of_nfs_storage_eng_policy                  : "{{ prefix }}-NFS-STORAGE-ENG_Policy"
+description_of_nfs_storage_eng_policy           : "Ethernet Network Group Policy(ENG) for NFS Storage vNIC"
+native_vlan_for_nfs_storage_vnic                : 3055
+allowed_vlans_for_nfs_storage_vnic              : 3055
+#
+# Storage Data VLANs for IP based Object Store (S3)
+name_of_s3_obj_storage_eng_policy               : "{{ prefix }}-S3-OBJ-STORAGE-ENG_Policy"
+description_of_s3_obj_storage_eng_policy        : "Ethernet Network Group Policy(ENG) for S3 OBJ Storage vNIC"
+native_vlan_for_s3_obj_storage_vnic             : 1209
+allowed_vlans_for_s3_obj_storage_vnic           : 1209
+
+# --------------------------------------------------------------------------------------------------------
+#     UCS Server Firmware Policy  - use with care!
+# --------------------------------------------------------------------------------------------------------
+
+name_of_firmware_policy: "{{ prefix }}-{{server_cpu_model}}-Firmware_Policy"
+description_of_firmware_policy: "Firmware Policy"
+model_family: "UCSX-210C-M7"
+bundle_version: "5.2(2.240074)"
+# bundle_version: "5.2(2.240053)" - recommended 
+# model_family: "UCSX-210C-M6"
+# bundle_version: "5.2(2.240053)"
+
+# --------------------------------------------------------------------------------------------------------
+#     Storage Policy
+# --------------------------------------------------------------------------------------------------------
+name_of_storage_policy: "{{ prefix }}-Storage_Policy"
+description_of_storage_policy: "Storage Policy"
+
+# --------------------------------------------------------------------------------------------------------
+#     vNIC Templates - OpenShift Control nodes
+# --------------------------------------------------------------------------------------------------------
+
+ocp_control_vnic_templates_list:
+#
+  ib-mgmt: # IMPORTANT: Keep ib_mgmt vnic template identical across control and worker nodes
+    name: "{{ prefix }}-C-IB-Mgt-vNIC_Template"
+    description: "OCP Control: In-Band Management vNIC Template for OCP Power Management network (BMC/Provisioning network)"
+    mac_pool: "mac_pool_fi_a"
+    ethernet_adapter_policy: "linux_default_ethernet_adapter_policy"
+    ethernet_qos_policy: "default_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "ib_mgmt_eng_policy"
+    failover_enabled: true
+    switch_id: "A"
+    pci_order: "0"    # Not used by vnic_template policy but by lan_connectivity policy
+
+  cluster-mgmt: # IMPORTANT: Keep cluster_mgmt vnic template identical across control and worker nodes
+    name: "{{ prefix }}-C-Cl-Mgt-vNIC_Template"
+    description: "OCP Control: Cluster Management vNIC Template for OCP Machine and Pod Networks (Baremetal network)"
+    mac_pool: "mac_pool_fi_a"
+    ethernet_adapter_policy: "linux_default_ethernet_adapter_policy"
+    ethernet_qos_policy: "default_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "cluster_mgmt_eng_policy"
+    failover_enabled: true
+    switch_id: "A"
+    pci_order: "1"    # Not used by vnic_template policy but by lan_connectivity policy
+
+# --------------------------------------------------------------------------------------------------------
+#     vNIC Templates - OpenShift Worker nodes
+# --------------------------------------------------------------------------------------------------------
+
+ocp_worker_vnic_templates_list:
+  #
+  ib-mgmt: # IMPORTANT: Keep ib_mgmt vnic template identical across control and worker nodes
+    name: "{{ prefix }}-W-IB-Mgt-vNIC_Template"
+    description: "OCP Worker: In-Band Management vNIC Template for OCP Power Management network (BMC/Provisioning network)"
+    mac_pool: "mac_pool_fi_a"
+    ethernet_adapter_policy: "linux_default_ethernet_adapter_policy"
+    ethernet_qos_policy: "default_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "ib_mgmt_eng_policy"
+    failover_enabled: true
+    switch_id: "A"
+    pci_order: "0"    # Not used by vnic_templates but by lan_connectivity policy
+
+  cluster-mgmt: # IMPORTANT: Keep cluster_mgmt vnic template identical across control and worker nodes
+    name: "{{ prefix }}-W-Cl-Mgt-vNIC_Template"
+    description: "OCP Worker: Cluster Management vNIC Template for OCP Machine and Pod Networks (Baremetal network)"
+    mac_pool: "mac_pool_fi_a"
+    ethernet_adapter_policy: "linux_default_ethernet_adapter_policy"
+    ethernet_qos_policy: "default_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "cluster_mgmt_eng_policy"
+    failover_enabled: true
+    switch_id: "A"
+    pci_order: "1"    # Not used by vnic_templates but by lan_connectivity policy
+
+  iscsi-a: # IP storage - iSCSI (Path-A) 
+    name: "{{ prefix }}-iSCSI-A-vNIC_Template"
+    description: "OCP Worker: iSCSI-A/NVMe-TCP-A vNIC Template for IP/Ethernet Block Storage"
+    mac_pool: "mac_pool_fi_a" 
+    ethernet_adapter_policy: "linux_rx16q{{vic_type}}_ethernet_adapter_policy"
+    ethernet_qos_policy: "jumbo_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "iscsi_a_eng_policy"
+    failover_enabled: false
+    switch_id: "A"
+    pci_order: "2"    # Not used by vnic_template policy but by lan_connectivity policy
+
+  iscsi-b: # IP storage - iSCSI (Path-B) 
+    name: "{{ prefix }}-iSCSI-B-vNIC_Template"
+    description: "OCP Worker: iSCSI-B/NVMe-TCP-B vNIC Template for IP/Ethernet Block Storage"
+    mac_pool: "mac_pool_fi_b"
+    ethernet_adapter_policy: "linux_rx16q{{vic_type}}_ethernet_adapter_policy"
+    ethernet_qos_policy: "jumbo_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "iscsi_b_eng_policy"
+    failover_enabled: false
+    switch_id: "B"
+    pci_order: "3"    # Not used by vnic_template policy but by lan_connectivity policy
+
+  nfs-storage: # IP storage - NFS 
+    name: "{{ prefix }}-NFS-vNIC_Template"
+    description: "OCP Worker: NFS STORAGE vNIC Template"
+    mac_pool: "mac_pool_fi_b"
+    ethernet_adapter_policy: "linux_rx16q{{vic_type}}_ethernet_adapter_policy"
+    ethernet_qos_policy: "jumbo_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "nfs_storage_eng_policy"
+    failover_enabled: true
+    switch_id: "B" 
+    pci_order: "4"    # Not used by vnic_template policy but by lan_connectivity policy
+  
+  obj-storage: # IP storage - S3 Object 
+    name: "{{ prefix }}-S3-OBJ-vNIC_Template"
+    description: "OCP Worker: S3 OBJECT STORE vNIC Template"
+    mac_pool: "mac_pool_fi_b"
+    ethernet_adapter_policy: "linux_rx16q{{vic_type}}_ethernet_adapter_policy"
+    ethernet_qos_policy: "jumbo_ethernet_qos_policy"
+    ethernet_network_control_policy: "ethernet_network_control_policy"
+    ethernet_network_group_policy: "s3_obj_storage_eng_policy"
+    failover_enabled: true
+    switch_id: "B" 
+    pci_order: "5"    # Not used by vnic_template policy but by lan_connectivity policy
+
+
+# --------------------------------------------------------------------------------------------------------
+#     LAN Connectivity Policies - OpenShift 
+# --------------------------------------------------------------------------------------------------------
+# NOTE: This playbook requires unique vNIC names when using multiple LAN connectivity policies
+#       as Intersight may delete existing ones if the names are same. 
+
+# --------------------------------------------------------------------------------------------------------
+#     OpenShift Control Nodes - when using Local Boot + iSCSI/NVMe + File/Object Storage
+# --------------------------------------------------------------------------------------------------------
+
+name_of_ocp_control_lan_connectivity_policy            : "{{ prefix }}-{{ vic_type }}-OCP-C-LAN-Connectivity_Policy"
+description_of_ocp_control_lan_connectivity_policy     : "LAN Connectivity Policy for Red Hat OpenShift Control Nodes"
+#
+# --------------------------------------------------------------------------------------------------------
+#     OpenShift Worker Nodes - when using Local Boot + iSCSI/NVMe + File/Object Storage
+# --------------------------------------------------------------------------------------------------------
+
+name_of_ocp_worker_lan_connectivity_policy            : "{{ prefix }}-{{ vic_type }}-OCP-W-LAN-Connectivity_Policy"
+description_of_ocp_worker_lan_connectivity_policy     : "LAN Connectivity Policy for Red Hat OpenShift Worker Nodes"
+#
+# --------------------------------------------------------------------------------------------------------
+#     Boot Order Policy Parameters for Local Boot 
+# --------------------------------------------------------------------------------------------------------
+
+name_of_local_boot_order_policy         : "{{ prefix }}-Local-{{ vic_type }}-Boot-Order_Policy"         
+description_of_local_boot_order_policy  : "Local Boot Order Policy"  
+boot_mode                               : "Uefi"  # default is Legacy
+secure_boot                             : "false"
+#
+
+# ########################################################################################################################
+#
+#     Create UCS Profile Templates - Chassis, Domain and Server
+#
+# ########################################################################################################################
+
+name_of_chassis_profile_template                                : "{{ prefix }}-Chassis-Profile_Template"
+description_of_chassis_profile_template                         : "Cisco UCS Chassis Profile Template"
+
+name_of_domain_profile_template                                 : "{{ prefix }}-Domain-Profile_Template"
+description_of_domain_profile_template                          : "Cisco UCS Domain Profile Template"
+
+name_of_fi_a_domain_profile_template                            : "{{ prefix }}-FI-A-Domain-Profile_Template"
+description_of_fi_a_domain_profile_template                     : "Cisco UCS FI-A Domain Profile Template"
+
+name_of_fi_b_domain_profile_template                            : "{{ prefix }}-FI-B-Domain-Profile_Template"
+description_of_fi_b_domain_profile_template                     : "Cisco UCS FI-B Domain Profile Template"
+
+name_of_local_ocp_control_server_profile_template               : "{{ prefix }}-{{server_cpu_model}}{{vic_type}}-{{boot_method}}-OCP-C-Server-Profile_Template"
+description_of_local_ocp_control_server_profile_template        : "Cisco UCS Server Profile Template for OCP Control Nodes"
+
+name_of_local_ocp_worker_server_profile_template                : "{{ prefix }}-{{server_cpu_model}}{{vic_type}}-{{boot_method}}-OCP-W-Server-Profile_Template"
+description_of_local_ocp_worker_server_profile_template         : "Cisco UCS Server Profile Template for OCP Worker Nodes"
+
+
+# ########################################################################################################################
+#
+#     Create UCS Profiles - Domain, Chassis and Server
+#
+# ########################################################################################################################
+
+name_of_ucs_domain_profile                        : "{{ prefix }}-{{fi_device_model}}-Domain_Profile"
+description_of_ucs_domain_profile                 : "Cisco UCS FI Domain Profile"
+
+# name_of_ucs_chassis_profile                     : <<Derived within task>>
+description_of_ucs_chassis_profile                : "Cisco UCS X-series Chassis Profile"
+
+name_of_local_ocp_c_server_profile                : "{{prefix}}-{{server_cpu_model}}{{vic_type}}-{{boot_method}}-OCP-C-Server_Profile"
+number_of_local_ocp_c_server_profiles             : 3
+#
+name_of_local_ocp_w_server_profile                : "{{prefix}}-{{server_cpu_model}}{{vic_type}}-{{boot_method}}-OCP-W-Server_Profile"
+number_of_local_ocp_w_server_profiles             : 3

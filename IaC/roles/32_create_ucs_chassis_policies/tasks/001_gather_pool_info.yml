@@ -1,0 +1,29 @@
+---
+- name: Gather IB-MGMT and OOB-MGMT IP Pools for IMC Access Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Get IB-MGMT IP Pool
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /ippool/Pools
+        query_params:
+          $filter: "Name eq '{{ name_of_ip_pool_for_ib_management_access }}'"
+        state: present
+      register:  ib_management_ip_pool
+    
+    - name: Get OOB-MGMT IP Pool
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /ippool/Pools
+        query_params:
+          $filter: "Name eq '{{ name_of_ip_pool_for_oob_management_access }}'"
+        state: present
+      register:  oob_management_ip_pool
+

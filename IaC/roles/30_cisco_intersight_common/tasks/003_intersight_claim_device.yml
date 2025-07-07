@@ -1,0 +1,54 @@
+---
+
+# -------------------------------------------------------------------------------------
+#  Pre-requisites: Create Intersight Organization for FlashStack VSI cluster
+# -------------------------------------------------------------------------------------
+- name: Define anchor for Intersight API login info
+  ansible.builtin.set_fact:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  run_once: true
+
+# Target will be added to "ALL" resource group by default 
+- name: Claim new Target in Intersight
+  cisco.intersight.intersight_target_claim:
+    <<: *api_info
+    device_id: "{{ device_id }}"
+    claim_code: "{{ claim_code }}"
+    state: present
+  register: intersight_claim_target
+  run_once: true
+  delegate_to: local_host
+  tags:
+    - intersight_claim_target
+    # - never, debug, always
+
+- name: Delete a Target (unclaim)
+  cisco.intersight.intersight_target_claim:
+    <<: *api_info 
+    device_id: "{{ device_id }}"
+    state: absent
+  register: intersight_delete_target
+  run_once: true
+  delegate_to: local_host
+  tags:
+    - intersight_delete_target
+    - never
+    #- debug, always
+
+
+- name: Print status of 'Claim Target' task
+  ansible.builtin.debug:
+    msg: "Output of Intersight Claim task is: '{{ intersight_claim_target.api_response.Moid}}' "
+
+
+- name: Print status of 'Claim Target' task
+  ansible.builtin.debug:
+    msg: "Claimed target in '{{ organization_name }}' with Moid: '{{ organization_moid }}'"
+  # tags: [never, debug, always]
+  # --------------------------------------------------------------------------------------

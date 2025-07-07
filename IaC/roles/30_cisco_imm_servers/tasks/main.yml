@@ -1,0 +1,70 @@
+---
+
+# -------------------------------------------------------------------------------
+#       CREATE UCS IMM POOLS FOR SERVER POLICIES
+# -------------------------------------------------------------------------------
+
+- name: Create UCS Server pools in Intersight
+  ansible.builtin.include_role:
+    name: 31_create_ucs_server_pools
+
+# -------------------------------------------------------------------------------
+#       CREATE UCS IMM POLICIES FOR DOMAIN, CHASSIS and SERVER TEMPLATES
+# -------------------------------------------------------------------------------
+
+- name: Create UCS Chassis Policies in Intersight
+  ansible.builtin.include_role:
+    name: 32_create_ucs_chassis_policies
+
+- name: Create UCS FI Domain Policies in Intersight
+  ansible.builtin.include_role:
+    name: 33_create_ucs_domain_policies
+
+- name: Create UCS Server Policies in Intersight
+  ansible.builtin.include_role:
+    name: 34_create_ucs_server_policies
+
+- name: Create UCS vNIC Templates in Intersight
+  ansible.builtin.include_tasks: 002_create_ucs_vnic_templates.yml
+
+- name: Create UCS LAN Connectivity Policies in Intersight
+  ansible.builtin.include_tasks: 003_create_ucs_lan_connectivity_policies.yml
+
+# -------------------------------------------------------------------------------
+#       CREATE UCS IMM DOMAIN, CHASSIS and SERVER PROFILE TEMPLATES
+# -------------------------------------------------------------------------------
+
+- name: Create UCS Chassis, Domain and Server Profile Templates in Intersight
+  ansible.builtin.include_role:
+    name: 35_create_ucs_profile_templates
+
+# -------------------------------------------------------------------------------
+#      DEPLOY UCS FI DOMAIN PROFILE - Derive, Assign and Deploy from Template
+# -------------------------------------------------------------------------------
+
+- name: Deploy UCS FI Domain Profile in Intersight
+  ansible.builtin.include_tasks: 004_deploy_ucs_domain_profile.yml
+
+# Update UCS FI Firmware after applying domain profile 
+
+# -------------------------------------------------------------------------------
+#      DEPLOY UCS-X CHASSIS PROFILE - Derive, Assign and Deploy from Template
+# -------------------------------------------------------------------------------
+
+- name: Deploy UCS Chassis Profile in Intersight
+  ansible.builtin.include_tasks: 005_deploy_ucs_chassis_profile.yml
+
+# -------------------------------------------------------------------------------
+#      DEPLOY UCS SERVER PROFILES - Derive, Assign and Deploy from Template
+# -------------------------------------------------------------------------------
+
+# ASSIGN AND DEPLOY IS CURRENTLY DONE MANUALLY - TO BE ADDED
+# !!! Decide where in the sequence this should be. IF we want to structure it 
+# such that profiles are derived first, then inventory updated to assign profiles 
+# to servers, then it needs to be done later
+
+- name: Deploy UCS Server Profiles in Intersight
+  ansible.builtin.include_tasks: 006_deploy_ucs_server_profiles.yml
+
+- name: Update inventory with discovered servers
+  ansible.builtin.include_tasks: 007_intersight_update_inventory.yml

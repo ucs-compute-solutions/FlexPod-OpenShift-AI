@@ -1,0 +1,188 @@
+---
+- name: "Create IMM Server Policies"
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info
+    resource_path: /organization/Organizations
+    query_params:
+      $filter: "Name eq '{{ org_name }}'"
+  register: intersight_org
+  delegate_to: localhost
+  tags: always
+  run_once: true
+
+- name: Collect information about various pools
+  ansible.builtin.include_tasks: 001_gather_pool_info.yml
+
+- name: Collect info on existing Boot Order, LAN and SAN Connectivity Policies
+  ansible.builtin.include_tasks: 002_gather_policy_info.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Adapter Policy - only for UCS Standalone Servers
+#   ansible.builtin.include_tasks: 003_create_adapter_policy.yml
+
+- name: Create Bios Policy
+  ansible.builtin.include_tasks: 004_create_bios_policy.yml
+
+- name: Create Boot Order Policy (Local, iSCSI, FC/SAN boot)
+  ansible.builtin.include_tasks: 005_create_boot_order_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Certificate Management Policy 
+#   ansible.builtin.include_tasks: 006_create_certificate_management_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Device Connector Policy - only for UCS Standalone Servers
+#   ansible.builtin.include_tasks: 007_create_device_connector_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Drive Security Policy 
+#   ansible.builtin.include_tasks: 008_create_drive_security_policy.yml
+
+- name: Create Ethernet Adapter Policies for Linux and VMware 
+  ansible.builtin.include_tasks: 009_create_ethernet_adapter_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Ethernet Network Policy - only for UCS Standalone Servers
+#   ansible.builtin.include_tasks: 010_create_ethernet_network_policy.yml
+
+- name: Create Ethernet Network Control Policy 
+  ansible.builtin.include_tasks: 011_create_ethernet_network_control_policy.yml
+
+- name: Create Ethernet Network Group Policy - vNIC VLANs for Management/NFS/iSCSI/Application Data
+  ansible.builtin.include_tasks: 012_create_ethernet_network_group_policy.yml
+
+- name: Create Ethernet QoS Policy
+  ansible.builtin.include_tasks: 013_create_ethernet_qos_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create FC Zone Policy 
+#   ansible.builtin.include_tasks: 014_create_fc_zone_control_policy.yml
+
+- name: Create Fibre Channel Adapter Policies
+  ansible.builtin.include_tasks: 015_create_fc_adapter_policy.yml
+  when: configure_fc == 'true'
+
+- name: Create Fibre Channel NVMe Adapter Policies
+  ansible.builtin.include_tasks: 015_create_fc_nvme_initiator_adapter_policy.yml
+  when: configure_fc_nvme == 'true'
+
+- name: Create FC Network Policy
+  ansible.builtin.include_tasks: 016_create_fc_network_policy.yml
+  when: configure_fc == 'true'
+
+- name: Create Fibre Channel Qos Policy
+  ansible.builtin.include_tasks: 017_create_fc_qos_policy.yml
+  when: configure_fc == 'true'
+
+- name: Create Firmware Policy 
+  ansible.builtin.include_tasks: 018_create_firmware_policy.yml
+
+# Defined as a part of Chassis Policy so skipping here
+# - name: Create IMC Access Policy 
+#   ansible.builtin.include_tasks: 019_create_imc_access_policy.yml
+
+- name: Create IPMI over LAN Policy to enable IPMI over LAN
+  ansible.builtin.include_tasks: 020_create_ipmi_over_lan_policy.yml
+
+- name: Create iSCSI Adapter Policy if iSCSI
+  ansible.builtin.include_tasks: 021_create_iscsi_adapter_policy.yml
+  when: configure_iscsi_boot == 'true'
+
+- name: Create iSCSI Boot Policy for boot from SAN 
+  ansible.builtin.include_tasks: 022_create_iscsi_boot_policy.yml
+  when: configure_iscsi_boot == 'true'
+
+- name: Create iSCSI Target Policy for boot from SAN
+  ansible.builtin.include_tasks: 023_create_iscsi_target_policy.yml
+  when: configure_iscsi_boot == 'true'
+
+- name: Create FC LAN Connectivity Policy if FC
+  ansible.builtin.include_tasks: 024_create_fc_lan_connectivity_policy.yml
+  when: (configure_fc == 'true') and (fc_lan_connectivity_policy.api_response.Moid is not defined)
+
+- name: Create iSCSI LAN Connectivity Policy if iSCSI
+  ansible.builtin.include_tasks: 024_create_iscsi_lan_connectivity_policy.yml
+  when: (configure_iscsi_boot == 'true') and (iscsi_lan_connectivity_policy.api_response.Moid is not defined)
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create LDAP Policy 
+#   ansible.builtin.include_tasks: 025_create_ldap_control_policy.yml
+
+- name: Create Local User Policy to allow KVM Access
+  ansible.builtin.include_tasks: 026_create_local_user_policy.yml
+
+# Defined as a part of Domain Policy so skipping here
+# - name: Create Network Connectivity Policy 
+#   ansible.builtin.include_tasks: 027_create_network_connectivity_policy.yml
+
+# Defined as a part of Domain Policy so skipping here
+# - name: Create NTP Policy 
+#   ansible.builtin.include_tasks: 028_create_ntp_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Persistent Memory Policy 
+#   ansible.builtin.include_tasks: 029_create_persistent_memory_policy.yml
+
+# Defined as a part of Chassis Policy so skipping here
+# - name: Create Power Policy 
+#   ansible.builtin.include_tasks: 030_create_power_policy.yml
+
+- name: Create SAN connectivity Policy
+  ansible.builtin.include_tasks: 031_create_san_connectivity_policy.yml
+  when: (configure_fc == 'true') and (san_connectivity_policy.api_response.Moid is not defined)
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create SD Card Policy 
+#   ansible.builtin.include_tasks: 032_create_sd_card_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create Serial Over LAN Policy 
+#   ansible.builtin.include_tasks: 033_create_serial_over_lan_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create SMTP Policy 
+#   ansible.builtin.include_tasks: 034_create_smtp_policy.yml
+
+# Defined as a part of Chassis Policy so skipping here
+# - name: Create SNMP Policy 
+#   ansible.builtin.include_tasks: 035_create_snmp_policy.yml
+
+# PLACE HOLDER - FOR FUTURE DEVELOPMENT
+# - name: Create SSH Policy 
+#   ansible.builtin.include_tasks: 036_create_ssh_policy.yml
+
+- name: Create Storage Policy - for local boot drives and ???
+  ansible.builtin.include_tasks: 037_create_storage_policy.yml
+
+# Defined as a part of Domain Policy so skipping here
+# - name: Create Syslog Policy 
+#   ansible.builtin.include_tasks: 038_create_syslog_policy.yml
+
+# Defined as a part of Chassis Policy so skipping here
+# - name: Create Thermal Policy 
+#   ansible.builtin.include_tasks: 039_create_thermal_policy.yml
+
+- name: Create Virtual KVM Policy
+  ansible.builtin.include_tasks: 040_create_vkvm_policy.yml
+
+- name: Create vMedia Policy
+  ansible.builtin.include_tasks: 041_create_vmedia_policy.yml
+
+
+
+
+
+
+
+
+
+
+

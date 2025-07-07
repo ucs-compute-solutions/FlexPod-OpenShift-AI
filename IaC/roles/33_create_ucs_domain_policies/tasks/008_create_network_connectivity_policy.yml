@@ -1,0 +1,32 @@
+---
+- name: Create Network Connectivity Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure Network Connectivity Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /networkconfig/Policies
+        update_method: "post"
+        query_params:
+          $filter: "Name eq '{{ name_of_network_connectivity_policy }}'"
+        api_body: {
+              "Name": "{{ name_of_network_connectivity_policy }}",
+              "Description": "{{ description_of_network_connectivity_policy }}",
+              "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+              "AlternateIpv4dnsServer": "{{ dns_servers[1] }}",
+              "EnableDynamicDns": false,
+              "EnableIpv4dnsFromDhcp": false,
+              "EnableIpv6": false,
+              "PreferredIpv4dnsServer": "{{ dns_servers[0] }}",
+              Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+        }
+        state: present
+      register: network_connectivity_policy
+    

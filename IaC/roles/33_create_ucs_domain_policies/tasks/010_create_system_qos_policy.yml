@@ -1,0 +1,34 @@
+---
+- name: Create System QoS Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure System QoS Policy
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/SystemQosPolicies
+        update_method: "post"
+        query_params:
+          $filter: "Name eq '{{ name_of_system_qos_policy }}'"
+        api_body: {
+              "Name": "{{ name_of_system_qos_policy }}",
+              "Description": "{{ description_of_system_qos_policy }}",
+              "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+              "Classes":[
+              {"Name":"Bronze","AdminState":"Disabled","BandwidthPercent":0,"Cos":1,"Mtu":1500,"PacketDrop":true,"Weight":7,"MulticastOptimize":false},
+              {"Name":"Silver","AdminState":"Disabled","BandwidthPercent":0,"Cos":2,"Mtu":1500,"PacketDrop":true,"Weight":8,"MulticastOptimize":false},
+              {"Name":"Gold","AdminState":"Disabled","BandwidthPercent":0,"Cos":4,"Mtu":1500,"PacketDrop":true,"Weight":9,"MulticastOptimize":false},
+              {"Name":"Platinum","AdminState":"Disabled","BandwidthPercent":0,"Cos":5,"Mtu":1500,"PacketDrop":true,"Weight":10,"MulticastOptimize":false},
+              {"Name":"Best Effort","AdminState":"Enabled","BandwidthPercent":50,"Cos":255,"Mtu":9216,"PacketDrop":true,"Weight":5,"MulticastOptimize":false},
+              {"Name":"FC","AdminState":"Enabled","BandwidthPercent":50,"Cos":3,"Mtu":2240,"PacketDrop":false,"Weight":5,"MulticastOptimize":false}],
+              Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: system_qos_policy
+    

@@ -1,0 +1,57 @@
+---
+# -------------------------------------------------------------------------------------
+#  Pre-requisites: Create Intersight Resource Group for FlashStack VSI cluster
+# -------------------------------------------------------------------------------------
+
+- name: Define anchor for Intersight API login info
+  ansible.builtin.set_fact:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  run_once: true
+
+- name: Add claimed device to resource group
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info
+    resource_path: /resource/Groups
+    query_params:
+      $filter: "Name eq '{{ resource_group_name }}'"
+    api_body: {
+      "Name": "{{ resource_group_name }}",
+      "Qualifier": "Allow-Selectors",
+      "Selectors": [
+        {
+          "ClassId": "resource.Selector",
+          "ObjectType": "resource.Selector",
+          "Selector": "/api/v1/asset/DeviceRegistrations?$filter=Moid in ('{{intersight_claim_target.api_response.RegisteredDevice.Moid}}')"
+        }
+      ]
+    }
+    state: present
+  register: add_device_to_resource_group
+  run_once: true
+  delegate_to: local_host
+  tags:
+    - add_device_to_resource_group
+    # - never, debug, always
+
+
+
+# - name: Moid for Resource Group
+#   ansible.builtin.set_fact:
+#     resource_group_moid: "{{ resource_group_response.api_response.Moid }}"
+#   run_once: true
+#   delegate_to: local_host
+
+# - name: Print status of 'Add Resource' policy
+#   ansible.builtin.debug:
+#     msg: "Created Resource Group '{{ resource_group_name }}' with Moid: '{{ resource_group_moid }}'"
+#   tags:
+#     - intersight_resource_group
+#     # - never, always, debug
+
+# -----------------------------------------------------------------------------------------

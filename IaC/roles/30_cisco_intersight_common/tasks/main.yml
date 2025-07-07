@@ -1,0 +1,16 @@
+---
+# Configuration Role for common Intersight functions
+#
+- name: Create Resource Group in Intersight
+  ansible.builtin.include_tasks: 001_intersight_create_resource_group.yml 
+- name: Create Organization in Intersight
+  ansible.builtin.include_tasks: 002_intersight_create_organization.yml
+- name: Claim a device in Intersight
+  ansible.builtin.include_tasks: 003_intersight_claim_device.yml
+- name: Add claimed device to resource group in Intersight 
+  ansible.builtin.include_tasks: 004_intersight_add_device_to_resource_group.yml
+
+
+
+
+

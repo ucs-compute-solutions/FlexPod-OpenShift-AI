@@ -1,0 +1,144 @@
+---
+- name: Create Boot Order Policies
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+      
+  block:
+    - name: Create Boot Order Policy for Local Boot
+      cisco.intersight.intersight_boot_order_policy:
+         <<: *api_info
+         name: "{{ name_of_local_boot_order_policy }}"
+         description: "{{ description_of_local_boot_order_policy }}"
+         organization: "{{ org_name }}"
+         configured_boot_mode: "{{ boot_mode }}"
+         uefi_enable_secure_boot: "{{ secure_boot }}"
+         boot_devices:
+            - device_name: KVM-Mapped-ISO
+              device_type: "Virtual Media"
+              enabled: true
+              virtual_media_subtype: "kvm-mapped-dvd" 
+            - device_name: CIMC-Mapped-ISO
+              device_type: "Virtual Media"
+              enabled: false # defined for use as a one-time boot device
+              virtual_media_subtype: "cimc-mapped-dvd"       
+            - device_name: M2-RAID
+              device_type: "Local Disk"
+              enabled: true
+              controller_slot: "MSTOR-RAID"   
+         state: present
+         tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+      register: local_boot_order_policy
+      when: configure_local_boot == 'true'
+   
+
+    - name: Create Boot Order Policy for FC
+      cisco.intersight.intersight_rest_api:
+         <<: *api_info
+         resource_path: /boot/PrecisionPolicies
+         query_params:
+            $filter: "Name eq '{{ name_of_fc_boot_order_policy }}'"
+         api_body: {
+            "Name": "{{ name_of_fc_boot_order_policy }}",
+            "Description": "{{ description_of_fc_boot_order_policy }}",
+            "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+            "ConfiguredBootMode": "{{ boot_mode }}",
+            "EnforceUefiSecureBoot": "{{ enable_uefi_secureboot|bool }}",
+            "BootDevices": [
+               {
+                  "Name": "KVM-Mapped-ISO",
+                  "Subtype": "kvm-mapped-dvd",
+                  "Enabled": true,
+                  "ObjectType": "boot.VirtualMedia"
+               },
+               {
+                  "Name": "{{ san_boot_device_1a_name }}",
+                  "Lun": "{{ lun_id }}",
+                  "InterfaceName": "{{ name_of_vhba_a }}",
+                  "Wwpn": "{{ san_boot_target_1a_wwpn }}",
+                  "Enabled": true,
+                  "ObjectType": "boot.San"
+               },
+               {
+                  "Name": "{{ san_boot_device_2a_name }}",
+                  "Lun": "{{ lun_id }}",
+                  "InterfaceName": "{{ name_of_vhba_a }}",
+                  "Wwpn": "{{ san_boot_target_2a_wwpn }}",
+                  "Enabled": true,
+                  "ObjectType": "boot.San"
+               },
+               {
+                  "Name": "{{ san_boot_device_1b_name }}",
+                  "Lun": "{{ lun_id }}",
+                  "InterfaceName": "{{ name_of_vhba_b }}",
+                  "Wwpn": "{{ san_boot_target_1b_wwpn }}",
+                  "Enabled": true,
+                  "ObjectType": "boot.San"
+               },
+               {
+                  "Name": "{{ san_boot_device_2b_name }}",
+                  "Lun": "{{ lun_id }}",
+                  "InterfaceName": "{{ name_of_vhba_b }}",
+                  "Wwpn": "{{ san_boot_target_2b_wwpn }}",
+                  "Enabled": true,
+                  "ObjectType": "boot.San"
+               },
+               {
+                  "Name": "CIMC-Mapped-ISO",
+                  "Subtype": "cimc-mapped-dvd",
+                  "Enabled": true,
+                  "ObjectType": "boot.VirtualMedia"
+               }
+            ]
+         }
+      register: fc_boot_policy
+      when: configure_fc_boot == 'true'
+
+    - name: Create Boot Order Policy for iSCSI
+      cisco.intersight.intersight_rest_api:
+         <<: *api_info
+         resource_path: /boot/PrecisionPolicies
+         query_params:
+            $filter : "Name eq '{{ name_of_scsi_boot_order_policy }}'"
+         api_body: {
+            "Name": "{{ name_of_scsi_boot_order_policy }}",
+            "Description": "{{ description_of_scsi_boot_order_policy }}",
+            "Organization": { "Moid": "{{ intersight_org.api_response.Moid }}" },
+            "ConfiguredBootMode": "{{ boot_mode }}",
+            "EnforceUefiSecureBoot": "{{ enable_uefi_secureboot|bool }}",
+            "BootDevices": [
+               {
+                  "Name": "KVM-Mapped-ISO",
+                  "Subtype": "kvm-mapped-dvd",
+                  "Enabled": true,
+                  "ObjectType": "boot.VirtualMedia"
+               },
+               {
+                  "Name": "ISCSI-A-Boot",
+                  "InterfaceName": "{{ name_of_iscsi_a_vnic }}",
+                  "Port": 0,
+                  "Enabled": true,
+                  "ObjectType": "boot.Iscsi"
+               },
+               {
+                  "Name": "ISCSI-B-Boot",
+                  "InterfaceName": "{{ name_of_iscsi_b_vnic }}",
+                  "Port": 0,
+                  "Enabled": true,
+                  "ObjectType": "boot.Iscsi"
+               },
+               {
+                  "Name": "CIMC-Mapped-ISO",
+                  "Subtype": "cimc-mapped-dvd",
+                  "Enabled": true,
+                  "ObjectType": "boot.VirtualMedia"
+               }
+            ],
+            Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: " {{ prefix }} "}]
+         }
+      register: iscsi_boot_policy
+      when: configure_iscsi_boot == 'true'

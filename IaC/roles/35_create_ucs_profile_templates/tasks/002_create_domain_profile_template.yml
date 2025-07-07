@@ -1,0 +1,137 @@
+---
+- name: Create Domain Profile Template 
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  block:
+    - name: Configure Domain Profile Template 
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/SwitchClusterProfileTemplates
+        query_params:
+          $filter: "Name eq '{{ name_of_domain_profile_template }}'"
+        api_body: {
+          "Name": "{{ name_of_domain_profile_template }}",
+          "Description": "{{ description_of_domain_profile_template }}",
+          "Organization": {"Moid": "{{ intersight_org.api_response.Moid }}"},
+          "ObjectType": "fabric.SwitchClusterProfileTemplate",
+          # "TargetPlatform": "FIAttached",
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: domain_profile_template
+
+    - name: Configure Domain Profile Template for FI-A
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/SwitchProfileTemplates
+        query_params:
+          $filter: "Name eq '{{ name_of_fi_a_domain_profile_template }}'"
+        api_body: {
+          "Name": "{{ name_of_fi_a_domain_profile_template }}",
+          "Description": "{{ description_of_fi_a_domain_profile_template }}",
+          "ObjectType": "fabric.SwitchProfileTemplate",
+          "Type": "instance",
+          "SwitchClusterProfileTemplate": {
+              "ObjectType": "fabric.SwitchClusterProfileTemplate",
+              "Moid": "{{ domain_profile_template.api_response.Moid }}"
+          },
+          "PolicyBucket": [
+            {
+              "Moid": "{{ fi_vlan_policy.api_response.Moid }}",
+              "ObjectType": "fabric.EthNetworkPolicy"
+            },
+            {
+              "Moid": "{{ fi_a_port_policy.api_response.Moid }}",
+              "ObjectType": "fabric.PortPolicy"
+            },
+            {
+              "Moid": "{{ syslog_policy.api_response.Moid }}",
+              "ObjectType": "syslog.Policy"
+            },
+            {
+              "Moid": "{{ system_qos_policy.api_response.Moid }}",
+              "ObjectType": "fabric.SystemQosPolicy"
+            },
+            # {
+            #   "Moid": "{{ snmp_policy.api_response.Moid }}",
+            #   "ObjectType": "snmp.Policy"
+            # },
+            {
+              "Moid": "{{ network_connectivity_policy.api_response.Moid }}",
+              "ObjectType": "networkconfig.Policy"
+            },
+            {
+              "Moid": "{{ switch_control_policy.api_response.Moid }}",
+              "ObjectType": "fabric.SwitchControlPolicy"
+            },
+            {
+              "Moid": "{{ ntp_policy.api_response.Moid }}",
+              "ObjectType": "ntp.Policy"
+            }
+          ],
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: fi_a_domain_profile_template
+
+
+    - name: Configure Domain Profile Template for FI-B
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /fabric/SwitchProfileTemplates
+        query_params:
+          $filter: "Name eq '{{ name_of_fi_b_domain_profile_template }}'"
+        api_body: {
+          "Name": "{{ name_of_fi_b_domain_profile_template }}",
+          "Description": "{{ description_of_fi_b_domain_profile_template }}",
+          "ObjectType": "fabric.SwitchProfileTemplate",
+          "Type": "instance",
+          "SwitchClusterProfileTemplate": {
+              "ObjectType": "fabric.SwitchClusterProfileTemplate",
+              "Moid": "{{ domain_profile_template.api_response.Moid }}"
+          },
+          "PolicyBucket": [
+            {
+              "Moid": "{{ fi_vlan_policy.api_response.Moid }}",
+              "ObjectType": "fabric.EthNetworkPolicy"
+            },
+            {
+              "Moid": "{{ fi_b_port_policy.api_response.Moid }}",
+              "ObjectType": "fabric.PortPolicy"
+            },
+            {
+              "Moid": "{{ syslog_policy.api_response.Moid }}",
+              "ObjectType": "syslog.Policy"
+            },
+            {
+              "Moid": "{{ system_qos_policy.api_response.Moid }}",
+              "ObjectType": "fabric.SystemQosPolicy"
+            },
+            # {
+            #   "Moid": "{{ snmp_policy.api_response.Moid }}",
+            #   "ObjectType": "snmp.Policy"
+            # },
+            {
+              "Moid": "{{ network_connectivity_policy.api_response.Moid }}",
+              "ObjectType": "networkconfig.Policy"
+            },
+            {
+              "Moid": "{{ switch_control_policy.api_response.Moid }}",
+              "ObjectType": "fabric.SwitchControlPolicy"
+            },
+            {
+              "Moid": "{{ ntp_policy.api_response.Moid }}",
+              "ObjectType": "ntp.Policy"
+            }
+          ],
+          Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+          }
+        state: present
+      register: fi_b_domain_profile_template
+    

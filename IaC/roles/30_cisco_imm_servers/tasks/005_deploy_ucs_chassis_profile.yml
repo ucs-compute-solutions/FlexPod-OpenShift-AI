@@ -1,0 +1,110 @@
+---
+
+# ---------------------------------------------------------------------------------------
+#   Deploy UCS Domain Profile for Cisco UCS FI Domain. Profile is derived from a
+#   Domain Profile Template, then assigned and deployed on FIs
+# ---------------------------------------------------------------------------------------
+
+- name: Define anchor for Intersight API login info
+  ansible.builtin.set_fact:
+      api_info: &api_info
+        api_private_key: "{{ intersight_api_private_key }}"
+        api_key_id: "{{ intersight_api_key_id }}"
+        api_uri: "{{ api_uri | default(omit) }}"
+        validate_certs: "{{ validate_certs | default(omit) }}"
+        state: "{{ state | default(omit) }}"
+
+- name: Configure chassis profile for UCS FI domain - derive, assign and deploy 
+  # Assign and Deploy is done in same workflow. Unless something fails during the deploy process
+  # it is not possible to just 'assign' and then later do a 'Deploy'. 
+  block: 
+    - name: Verify parameters referenced in following task(s)
+      debug:
+        var: chassis_profile_template 
+      when: configure_openshift == 'true'
+
+    - name: Get Moid for Cisco UCS-X Series Chassis
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /equipment/Chasses
+        query_params:
+          $filter: "Serial eq '{{ chassis_sn }}'"
+      register: chassis
+
+    - name: Verify parameters referenced in following task(s)
+      debug:
+        var: chassis
+    
+    - name: Set parameters for use in following task
+      ansible.builtin.set_fact:
+        name_of_ucs_chassis_profile: "{{chassis.api_response.Name}}-Chassis_Profile"
+
+    - name: Derive chassis profile from chassis template  - USE WITH CARE!!!
+      cisco.intersight.intersight_rest_api:
+        <<: *api_info
+        resource_path: /bulk/MoCloners
+        query_params:
+          $filter: "Name eq '{{ name_of_ucs_chassis_profile }}'"
+        api_body: {
+          Sources: [
+            {
+              "Moid": "{{chassis_profile_template.api_response.Moid}}",
+              "ObjectType": "chassis.ProfileTemplate"
+            }
+          ],
+          Targets: [
+            {
+              "Name": "{{name_of_ucs_chassis_profile}}",
+              "ObjectType": "chassis.Profile",
+              "AssignedChassis": {
+                "Moid": "{{chassis.api_response.Moid}}",
+                "ObjectType": "equipment.Chassis"
+              },
+              "Organization": {
+                "Moid": "{{intersight_org.api_response.Moid}}",
+                "ObjectType": "organization.Organization"
+              },
+              "Description": "{{description_of_ucs_chassis_profile}}",
+              "Tags": [
+                  {
+                      "Key": "Provisioned by:",
+                      "Value": "Intersight-Ansible"
+                  },
+                  {
+                      "Key": "Project:",
+                      "Value": "{{prefix}}"
+                  }
+              ]
+            }
+          ]
+        }
+        state: present  
+      register: chassis_profile
+    
+
+    
+    - name: Verify parameters referenced in following task(s)
+      debug:
+        var: chassis_profile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

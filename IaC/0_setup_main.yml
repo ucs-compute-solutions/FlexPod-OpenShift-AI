@@ -1,0 +1,10 @@
+---
+
+# - name: Setup Cisco Nexus DC network
+#   ansible.builtin.import_playbook: 1_setup_network.yml
+
+# - name: Setup NetApp Storage
+#   ansible.builtin.import_playbook: 2_setup_netapp_storage.yml
+
+- name: Setup Cisco UCS compute
+  ansible.builtin.import_playbook: 3_setup_cisco_compute.yml

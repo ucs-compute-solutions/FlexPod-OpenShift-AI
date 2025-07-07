@@ -1,0 +1,84 @@
+---
+- name: Create Local User Policy
+  vars:
+    api_info: &api_info
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+
+  block: 
+    - name: Debug local_users variable
+      debug:
+        var: local_users_list
+
+    # - name: Transform local_users
+    #   set_fact:
+    #     transformed_local_users: "{{ local_users | map('combine', {'EndPointUserRoles': [item]}) | list }}"
+    #   loop: "{{ local_users }}"
+
+    # - name: Set fact with transformed local_users
+    #   set_fact:
+    #     transformed_local_users: 
+    #       EndPointUserRoles: "{{ local_users }}"
+
+    - name: Configure Local User Policy
+      cisco.intersight.intersight_local_user_policy:
+        <<: *api_info
+        name: "{{ name_of_local_user_policy }}"
+        description: "{{ description_of_local_user_policy }}"
+        enable_password_expiry: false
+        enforce_strong_password: true
+        password_history: 2
+        purge: true
+        always_update_password: false
+        #local_users: "{{ local_users }}"
+        local_users: "{{ [item] }}"
+        organization: "{{ intersight_org.api_response.Name }}"
+        tags: 
+          - Key: "Provisioned by:"
+            Value: "Intersight-Ansible"
+          - Key: "Project:"
+            Value: "{{ prefix }}"
+        state: present
+      loop: "{{ local_users_list }}"
+      register: local_user_policy
+      #run_once: true
+    
+    - name: IAM Endpoint - Local user policy
+      debug:
+        msg: "IAM ENDPOINT LOCAL USER POLICY '{{local_user_policy}}'"
+    
+# - name: "Configure Local User Policy"
+#   vars:
+#     api_info: &api_info
+#       api_private_key: "{{ intersight_api_private_key }}"
+#       api_key_id: "{{ intersight_api_key_id }}"
+#       api_uri: "{{ api_uri | default(omit) }}"
+#       validate_certs: "{{ validate_certs | default(omit) }}"
+#       state: "{{ state | default(omit) }}"
+#   block:
+#   - name: "LAN"
+#     cisco.intersight.intersight_local_user_policy:
+#       <<: *api_info
+#       name: "{{ name_of_local_user_policy }}"
+#       description: "{{ description_of_local_user_policy }}"
+#       # tags:
+#       #   - Key: configmode
+#       #     Value: ansible
+
+#       #   - Key: prefix
+#       #     Value: "{{ prefix }}"
+#       enforce_strong_password: true
+#       enable_password_expiry: false
+#       password_history: 0
+#       purge: true
+#       always_update_password: true
+#       local_users:
+#         - username: "{{ name_of_local_user }}"
+#           role: admin
+#           password: "{{ password_for_local_user }}"
+#       organization: "{{ org_name }}"
+#       # state: present
+#     register: local_user_policy

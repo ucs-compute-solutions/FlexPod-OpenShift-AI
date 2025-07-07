@@ -1,0 +1,102 @@
+# Linux Default Ethernet Adapter Policy
+linux_default_interrupt_settings_count      : 8
+linux_default_rx_queue_settings_count       : 4
+linux_default_rx_queue_settings_ringsize    : 512
+linux_default_tx_queue_settings_count       : 1
+linux_default_tx_queue_settings_ringsize    : 256
+linux_default_completion_queue_count        : 5
+linux_default_completion_queue_ringsize     : 1
+
+# Linux 16 Rx Queues, 5th Gen VIC - Ethernet Adapter Policy
+linux_rx16q5G_interrupt_settings_count      : 19
+linux_rx16q5G_rx_queue_settings_count       : 16
+linux_rx16q5G_rx_queue_settings_ringsize    : 16384
+linux_rx16q5G_tx_queue_settings_count       : 1
+linux_rx16q5G_tx_queue_settings_ringsize    : 16384
+linux_rx16q5G_completion_queue_count        : 17
+linux_rx16q5G_completion_queue_ringsize     : 1
+
+# Linux 16 Rx Queues, 4th Gen VIC - Ethernet Adapter Policy
+linux_rx16q4G_interrupt_settings_count      : 19
+linux_rx16q4G_rx_queue_settings_count       : 16
+linux_rx16q4G_rx_queue_settings_ringsize    : 4096
+linux_rx16q4G_tx_queue_settings_count       : 1
+linux_rx16q4G_tx_queue_settings_ringsize    : 4096
+linux_rx16q4G_completion_queue_count        : 17
+linux_rx16q4G_completion_queue_ringsize     : 1
+
+# VMware Default Ethernet Adapter Policy 
+vmware_default_number_of_interrupts    : 4
+vmware_default_receive_queue_count     : 1
+vmware_default_receive_ring_size       : 512
+vmware_default_transmit_queue_count    : 1
+vmware_default_transmit_ring_size      : 256
+vmware_default_completion_queue_count  : 2
+vmware_default_completion_ring_size    : 1
+
+# VMware High Traffic Interface - Ethernet Adapter Policy  (Applies to vDS0)
+vmht_number_of_interrupts    : 11
+vmht_receive_queue_count     : 8
+vmht_receive_ring_size       : 4096
+vmht_transmit_queue_count    : 1
+vmht_transmit_ring_size      : 4096
+vmht_completion_queue_count  : 9
+vmht_completion_ring_size    : 1
+
+# VMware 16 Rx Queues, 5th Gen VIC - Ethernet Adapter Policy (Applies to iSCSI Boot/NVMe-TCP Interface)
+vmware_rx16q5G_number_of_interrupts    : 19
+vmware_rx16q5G_receive_queue_count     : 16
+vmware_rx16q5G_receive_ring_size       : 16384
+vmware_rx16q5G_transmit_queue_count    : 1
+vmware_rx16q5G_transmit_ring_size      : 16384
+vmware_rx16q5G_completion_queue_count  : 17
+vmware_rx16q5G_completion_ring_size    : 1
+
+# VMware 16 Rx Queues, 4th Gen VIC - Ethernet Adapter Policy (Applies to iSCSI Boot/NVMe-TCP Interface)
+vmware_rx16q4G_number_of_interrupts    : 19
+vmware_rx16q4G_receive_queue_count     : 16
+vmware_rx16q4G_receive_ring_size       : 4096
+vmware_rx16q4G_transmit_queue_count    : 1
+vmware_rx16q4G_transmit_ring_size      : 4096
+vmware_rx16q4G_completion_queue_count  : 17
+vmware_rx16q4G_completion_ring_size    : 1
+
+# iSCSI - BOOT FROM SAN
+# NOT USED IN THIS CVD
+# iSCSI Adapter Policy
+description_of_iscsi_adapter_policy: "iSCSI Adapter policy"
+
+# iSCSI Target Policies
+description_of_iscsi_a_primary_target_policy    : "iSCSI-A Primary Target Policy"
+description_of_iscsi_a_secondary_target_policy  : "iSCSI-A Secondary Target Policy"
+description_of_iscsi_b_primary_target_policy    : "iSCSI-B Primary Target Policy"
+description_of_iscsi_b_secondary_target_policy  : "iSCSI-B Secondary Target Policy"
+
+# iSCSI Boot Policies
+description_of_iscsi_a_boot_policy              : "iSCSI-A Boot Policy"
+description_of_iscsi_b_boot_policy              : "iSCSI-B Boot Policy"
+
+# LAN Connectivity Policies
+description_of_iscsi_lan_connectivity_policy    : "LAN Connectivity Policy for iSCSI boot from SAN - {{ vic_type }} VIC"
+
+# DC - BOOT FROM SAN
+# NOT USED IN THIS CVD
+description_of_fc_lan_connectivity_policy       : "LAN Connectivity Policy for FC boot from SAN - {{ vic_type }} VIC"
+
+# Fibre Channel Network Policy: SAN-A
+description_of_fc_network_policy_san_a  : "SAN-A Fibre Channel Network Policy using VSAN {{ vsan_id_SAN_A }}"
+
+# Fibre Channel Network Policy: SAN-B
+description_of_fc_network_policy_san_b  : "SAN-B Fibre Channel Network Policy using VSAN {{ vsan_id_SAN_B }}"
+
+# Fibre Channel QoS Policy
+description_of_fc_qos_policy  : "Fibre Channel QoS policy with default values"
+
+# Fibre Channel Adapter Policy
+description_of_fc_adapter_policy    : "Fibre Channel Adapter policy with VMware platform defined default values"
+
+# FC-NVMe Initiator Adapter Policy
+description_of_fc_nvme_initiator_adapter_policy    : "FC-NVMe Initiator Adapter policy with platform defined default values"
+
+# SAN connectivity Policy
+description_of_san_connectivity_policy  : "SAN Connectivity Policy to add FC HBAs - {{ vic_type }} VIC"

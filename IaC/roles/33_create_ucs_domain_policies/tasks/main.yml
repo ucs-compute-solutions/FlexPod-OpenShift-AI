@@ -1,0 +1,79 @@
+---
+- name: "Create UCS FI Domain Policies"
+  vars:
+    api_info: &api_info_org_moid
+      api_private_key: "{{ intersight_api_private_key }}"
+      api_key_id: "{{ intersight_api_key_id }}"
+      api_uri: "{{ api_uri | default(omit) }}"
+      validate_certs: "{{ validate_certs | default(omit) }}"
+      state: "{{ state | default(omit) }}"
+  
+  cisco.intersight.intersight_rest_api:
+    <<: *api_info_org_moid
+    resource_path: /organization/Organizations
+    query_params:
+      $filter: "Name eq '{{ org_name }}'"
+  register: intersight_org
+  delegate_to: localhost
+  tags: always
+  run_once: true
+
+- name: Create VLAN Multicast Policy Policy
+  ansible.builtin.include_tasks: 001_create_vlan_multicast_policy.yml
+
+- name: Create FI VLAN Policy
+  ansible.builtin.include_tasks: 002_create_fi_vlan_policy.yml
+
+# Not used in this CVD
+- name: Create FI VSAN Policy
+  ansible.builtin.include_tasks: 003_create_vsan_policy.yml
+  when: (configure_fc == true)   
+
+- name: Create FI Link Control Policy
+  ansible.builtin.include_tasks: 004_create_link_control_policy.yml
+  
+- name: Create FI Port Policies for FI-A and FI-B
+  ansible.builtin.include_tasks: 005_create_fi_port_policy.yml
+
+- name: Create FI NTP Policy
+  ansible.builtin.include_tasks: 006_create_ntp_policy.yml
+
+- name: Create FI Syslog Policy
+  ansible.builtin.include_tasks: 007_create_syslog_policy.yml
+
+- name: Create FI Network Connectivity Policy
+  ansible.builtin.include_tasks: 008_create_network_connectivity_policy.yml
+
+# Included in the chassis profile template so skipping it here
+# - name: Create SNMP Policy
+#   ansible.builtin.include_tasks: 00x_create_snmp_policy.yml
+
+- name: Create FI System QoS Policy
+  ansible.builtin.include_tasks: 010_create_system_qos_policy.yml
+
+- name: Create FI Switch Control Policy
+  ansible.builtin.include_tasks: 011_create_switch_control_policy.yml
+
+
+# The following domain policies are not yet implemented or used in this CVD
+#
+# - name: Create Certificate Management Policy
+#   ansible.builtin.include_tasks: create_certificate_management_policy.yml
+
+# - name: Create Ethernet Network Control Policy
+#   ansible.builtin.include_tasks: create_ethernet_network_control_policy.yml
+
+# - name: Create Ethernet Network Group Policy
+#   ansible.builtin.include_tasks: create_ethernet_network_group_policy.yml
+
+# - name: Create Flow Control Policy
+#   ansible.builtin.include_tasks: create_flow_control_policy.yml
+
+# - name: Create LDAP Policy
+#   ansible.builtin.include_tasks: create_ldap_policy.yml
+
+# - name: Create Link Aggregation Policy
+#   ansible.builtin.include_tasks: create_link_aggregation_policy.yml
+
+# - name: Create MACsec Policy
+#   ansible.builtin.include_tasks: create_macsec_policy.yml

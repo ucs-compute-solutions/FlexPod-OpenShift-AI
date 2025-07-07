@@ -1,0 +1,21 @@
+---
+- name: Setup Cisco Intersight
+  hosts: "{{ group | default('Dynamic_Inventory') }}"
+  #hosts: localhost - when used, explicity specify vars file path as shown below
+  connection: local
+  gather_facts: false
+  vars_files:
+    # Following does not need to be defined when using the directory structure in this project for: inventories, roles and playbooks
+    # - inventory/group_vars/cisco_intersight_common/vars
+    # - inventory/group_vars/cisco_intersight_common/vault
+  roles:
+    - role: 30_cisco_intersight_common
+
+  
+- name: Setup Cisco UCS FI attached servers in Intersight Managed Mode (IMM)
+  hosts: "{{ group | default('cisco_imm_servers') }}" 
+  connection: local
+  gather_facts: false
+  vars_files:
+  roles:
+    - role: 30_cisco_imm_servers

@@ -10,7 +10,7 @@
 #
 # Prefix represents the project id added to the pool/policy/profile names to identify and pool info
 # Example Project IDs for CVDs: FSVa, FSBa, FPVa, FPBa, (Infra: Rack-Ia); 'a' for Ansible
-prefix                : "ANS"
+prefix                : "FPB-ANS"
 
 # Sub-Prefix (ocp,vmw) represents the OS stack 
 # Currently project ID uses V and B for VMware and Baremetal
@@ -83,7 +83,7 @@ secondary_dns_ib_mgmt: 172.20.10.53
 
 # IP Address Pool for Out-of-Band (OOB) Management Access 
 #
-name_of_ip_pool_for_oob_management_access: "FPB-OOB-MGMT-IP_Pool"
+name_of_ip_pool_for_oob_management_access: "{{ prefix }}-OOB-MGMT-IP_Pool"
 description_of_ip_pool_for_oob_mgmt_access: "IP Pool for Out-of-Band Mgmt access"
 ip_pool_start_for_oob_management_access: 10.120.0.231
 size_of_ip_pool_for_oob_management_access: 9
@@ -285,13 +285,7 @@ fi_server_ports:
       - 3
       - 4
 
-
-# NTP
-name_of_ntp_policy                          : "{{ prefix }}-NTP_Policy"
-description_of_ntp_policy                   : "NTP Policy"
-ntp_servers:
-  - "172.20.10.120"
-  - "172.20.10.118"
+# NTP - moved to all/vars file
 
 # TIMEZONE
 ucs_timezone                                : "America/New_York"  
@@ -312,9 +306,9 @@ description_of_syslog_policy                : "SYSLOG Policy"
 name_of_network_connectivity_policy         : "{{ prefix }}-Network-Connectivity_Policy"
 description_of_network_connectivity_policy  : "Network-Connectivity Policy"
 
-dns_servers:
-  - "172.20.4.53"
-  - "172.20.4.54"
+# dns_servers:
+#   - "172.20.4.53"
+#   - "172.20.4.54"
 
 
 # ########################################################################################################################

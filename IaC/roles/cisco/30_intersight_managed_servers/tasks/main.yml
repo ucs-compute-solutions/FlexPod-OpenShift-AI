@@ -6,7 +6,7 @@
 
 - name: Create UCS Server pools in Intersight
   ansible.builtin.include_role:
-    name: 31_create_ucs_server_pools
+    name: cisco/31_create_ucs_server_pools
 
 # -------------------------------------------------------------------------------
 #       CREATE UCS IMM POLICIES FOR DOMAIN, CHASSIS and SERVER TEMPLATES
@@ -14,15 +14,15 @@
 
 - name: Create UCS Chassis Policies in Intersight
   ansible.builtin.include_role:
-    name: 32_create_ucs_chassis_policies
+    name: cisco/32_create_ucs_chassis_policies
 
 - name: Create UCS FI Domain Policies in Intersight
   ansible.builtin.include_role:
-    name: 33_create_ucs_domain_policies
+    name: cisco/33_create_ucs_domain_policies
 
 - name: Create UCS Server Policies in Intersight
   ansible.builtin.include_role:
-    name: 34_create_ucs_server_policies
+    name: cisco/34_create_ucs_server_policies
 
 - name: Create UCS vNIC Templates in Intersight
   ansible.builtin.include_tasks: 002_create_ucs_vnic_templates.yml
@@ -36,7 +36,7 @@
 
 - name: Create UCS Chassis, Domain and Server Profile Templates in Intersight
   ansible.builtin.include_role:
-    name: 35_create_ucs_profile_templates
+    name: cisco/35_create_ucs_profile_templates
 
 # -------------------------------------------------------------------------------
 #      DEPLOY UCS FI DOMAIN PROFILE - Derive, Assign and Deploy from Template

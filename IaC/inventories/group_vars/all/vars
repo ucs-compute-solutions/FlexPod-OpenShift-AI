@@ -1,0 +1,27 @@
+---
+# ##############################################################################
+#
+#   Global/Common Configuration Parameters
+#
+# ##############################################################################
+
+# !!! Sensitive Data should be encrypted using Ansible Vault. 
+# Variables should be put in vault file and use name that starts with 'vault_'
+
+# NTP
+name_of_ntp_policy: "{{ prefix }}-NTP_Policy"
+description_of_ntp_policy: "NTP Policy"
+ntp_servers:
+  - "172.20.10.120"
+  - "172.20.10.118"
+
+# Domain
+domain_name: "fpb.local" 
+
+# DNS
+dns_servers:
+  - "172.20.4.53"
+  - "172.20.4.54"
+
+# Timezone
+timezone: "America/New_York"  

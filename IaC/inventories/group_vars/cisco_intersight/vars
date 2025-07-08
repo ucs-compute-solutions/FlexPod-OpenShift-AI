@@ -16,11 +16,11 @@ intersight_api_key_id: "{{ vault_intersight_api_key_id }}"
 # intersight_validate_certs: "false"
 
 # Specify a Resource Group Name for infrastructure resources 
-resource_group_name: "ANS-default"
+resource_group_name: "FPB-ANS_RG"
 resource_group_description: "FlexPod OpenShift AI Baremetal CVD Resources"
 
 # Specify an Organization Name for infrastructure resources 
-organization_name: "ANS-ORG"
+organization_name: "FPB-ANS_ORG"
 organization_description: "FlexPod OpenShift AI Baremetal CVD Organization"
 org_name: "{{ organization_name }}"
 

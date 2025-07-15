@@ -10,7 +10,7 @@
 #
 # Prefix represents the project id added to the pool/policy/profile names to identify and pool info
 # Example Project IDs for CVDs: FSVa, FSBa, FPVa, FPBa, (Infra: Rack-Ia); 'a' for Ansible
-prefix                : "FPB-ANS"
+# prefix   - moved to group_vars/all.yml
 
 # Sub-Prefix (ocp,vmw) represents the OS stack 
 # Currently project ID uses V and B for VMware and Baremetal
@@ -39,28 +39,28 @@ fi_b_sn               : "FDO27300E91"
 chassis_sn            : "FOX2737P2KE"     # AC10-UCS-FI-6536-1
 # chassis_sn            : "FOX2629P090"   # AC10-UCS-FI-6536-2
 
-# OS stack
-configure_openshift   : "true"
-configure_vmware      : "false"
+#  Moved to group_vars/all.yml
+# # OS stack
+# configure_openshift   : "true"
+# configure_vmware      : "false"
 
-# Boot Options (LB - Local Boot, iSCSI, FC )
-boot_method: "LB"
+# # Configure Local Boot policies and profiles only when this value is true
+# configure_local_boot  : "true"   # when using local boot
 
-# Configure Local Boot policies and profiles only when this value is true
-configure_local_boot  : "true"   # when using local boot
+# # Configure iSCSI policies and profiles only when this value is true
+# configure_iscsi_boot  : "false"   # when using iSCSI boot
+# configure_iscsi       : "true"    # when using iSCSI storage but not iSCSI SAN boot
+# configure_nvme_tcp    : "true"    # when using NVMe-TCP storage but not for booting
 
-# Configure iSCSI policies and profiles only when this value is true
-configure_iscsi_boot  : "false"   # when using iSCSI boot
-configure_iscsi       : "true"    # when using iSCSI storage but not iSCSI SAN boot
-configure_nvme_tcp    : "true"    # when using NVMe-TCP storage but not for booting
+# # Configure Fibre Channel policies and profiles only when this value is true
+# configure_fc_boot     : "false"   # when using FC boot
+# configure_fc          : "false"   # when using FC storage but not FC SAN boot
 
-# Configure Fibre Channel policies and profiles only when this value is true
-configure_fc_boot     : "false"   # when using FC boot
-configure_fc          : "false"   # when using FC storage but not FC SAN boot
+# # Configure Fibre Channel NVMe vHBAs; only when this value true
+# configure_fc_nvme     : "false"
 
-# Configure Fibre Channel NVMe vHBAs; only when this value true
-configure_fc_nvme     : "false"
-
+# # Boot Options (LB - Local Boot, iSCSI, FC )
+# boot_method: "LB"
 
 # ########################################################################################################################
 #
@@ -181,15 +181,7 @@ ib_vlan_for_cimc_access             : "1201"   #Same as IB-MGMT VLAN
 name_of_power_policy                : "{{ prefix }}-Power_Policy"
 description_of_power_policy         : "Power Policy"
 
-# SNMP Policy
-name_of_snmp_policy                 : "{{ prefix }}-SNMP-Policy"
-description_of_snmp_policy          : "SNMP Policy"
-configure_snmpv3                    : true 
-snmp_user_name                      : "snmpadmin"
-snmp_auth_password                  : "{{ vault_snmp_password }}"
-snmp_priv_password                  : "{{ vault_snmp_password }}"
-snmp_contact                        : "snmp-admin@fpb.local"
-snmp_location                       : "Cisco RTP Building 4, Lab 141A, AC10"
+# SNMP Policy - moved to group_vars/all.yml
 
 # Thermal Policy
 name_of_thermal_policy              : "{{ prefix }}-Thermal_Policy"
@@ -215,34 +207,37 @@ name_of_fi_vlan_policy                  : "{{ prefix }}-VLAN_Policy"
 description_of_fi_vlan_policy           : "FI VLAN Policy"
 
 # Enable VLANs on FI Uplinks 
-fi_vlan_list:
-  - name: "Native_VLAN"
-    id: 2
-    native_vlan: True
-  - name: "{{ prefix }}-IB-MGMT_VLAN"  #BMC/CIMC
-    id: 1201
-    native_vlan: False
-  - name: "{{ prefix }}-CLUSTER-MGMT_VLAN"
-    id: 1202
-    native_vlan: False
-  - name: "{{ prefix }}-iSCSI-A_VLAN"
-    id: 3015
-    native_vlan: False
-  - name: "{{ prefix }}-iSCSI-B_VLAN"
-    id: 3025
-    native_vlan: False
-  - name: "{{ prefix }}-NVMe-TCP-A_VLAN"
-    id: 3035
-    native_vlan: False
-  - name: "{{ prefix }}-NVMe-TCP-B_VLAN"
-    id: 3045
-    native_vlan: False
-  - name: "{{ prefix }}-NFS_VLAN"
-    id: 3055
-    native_vlan: False
-  - name: "{{ prefix }}-S3-OBJ_VLAN"
-    id: 1209
-    native_vlan: False
+# VLANs defined in group_vars/all.yml
+fi_vlan_list: "{{ storage_vlans + other_vlans }}"
+
+# fi_vlan_list:
+#   - name: "Native_VLAN"
+#     id: 2
+#     native_vlan: True
+#   - name: "{{ prefix }}-IB-MGMT_VLAN"  #BMC/CIMC/OTHER
+#     id: 1201
+#     native_vlan: False
+#   - name: "{{ prefix }}-CLUSTER-MGMT_VLAN" #BM-OpenShift
+#     id: 1202
+#     native_vlan: False
+#   - name: "{{ prefix }}-iSCSI-A_VLAN"
+#     id: 3015
+#     native_vlan: False
+#   - name: "{{ prefix }}-iSCSI-B_VLAN"
+#     id: 3025
+#     native_vlan: False
+#   - name: "{{ prefix }}-NVMe-TCP-A_VLAN"
+#     id: 3035
+#     native_vlan: False
+#   - name: "{{ prefix }}-NVMe-TCP-B_VLAN"
+#     id: 3045
+#     native_vlan: False
+#   - name: "{{ prefix }}-NFS_VLAN"
+#     id: 3055
+#     native_vlan: False
+#   - name: "{{ prefix }}-S3-OBJ_VLAN"
+#     id: 1209
+#     native_vlan: False
 
 # FI Port Policy Parameters
 
@@ -285,7 +280,7 @@ fi_server_ports:
       - 3
       - 4
 
-# NTP - moved to all/vars file
+# NTP - moved to group_vars/all.yml
 
 # TIMEZONE
 ucs_timezone                                : "America/New_York"  
@@ -306,9 +301,7 @@ description_of_syslog_policy                : "SYSLOG Policy"
 name_of_network_connectivity_policy         : "{{ prefix }}-Network-Connectivity_Policy"
 description_of_network_connectivity_policy  : "Network-Connectivity Policy"
 
-# dns_servers:
-#   - "172.20.4.53"
-#   - "172.20.4.54"
+# dns_servers  - moved to group_vars/all.yml
 
 
 # ########################################################################################################################

@@ -1,6 +1,6 @@
 ---
 # -------------------------------------------------------------------------------------
-#  Pre-requisites: Create Intersight Organization for FlashStack VSI cluster
+#  Pre-requisites: Create Intersight Organization for Baremetal cluster
 # -------------------------------------------------------------------------------------
 
 - name: Define anchor for Intersight API login info

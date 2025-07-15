@@ -20,7 +20,7 @@
             "Name": "{{ name_of_chassis_profile_template }}",
             "Description": "{{ description_of_chassis_profile_template }}",
             "Organization": {"Moid": "{{ intersight_org.api_response.Moid }}"},
-            ClassId: "chassis.ProfileTemplate",
+            "ClassId": "chassis.ProfileTemplate",
             "PolicyBucket": [
               {
                 "Moid": "{{ imc_access_policy.api_response.Moid }}",
@@ -40,8 +40,9 @@
               }
             ],
             "TargetPlatform": "FIAttached",
-            Tags: [{Key: "Provisioned by:", Value: "Intersight-Ansible"},{Key: "Project:", Value: "{{ prefix }}"}]
+            "Tags": [{"Key": "Provisioned by:", "Value": "Intersight-Ansible"},{"Key": "Project:", "Value": "{{ prefix }}"}]
         }
       state: present
     register: chassis_profile_template
-    
+
+

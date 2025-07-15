@@ -25,3 +25,111 @@ dns_servers:
 
 # Timezone
 timezone: "America/New_York"  
+
+# SNMP
+name_of_snmp_policy                 : "{{ prefix }}-SNMP-Policy"
+description_of_snmp_policy          : "SNMP Policy"
+configure_snmpv3                    : true 
+snmp_user_name                      : "snmpadmin"
+snmp_auth_password                  : "{{ vault_snmp_password }}"
+snmp_priv_password                  : "{{ vault_snmp_password }}"
+snmp_contact                        : "snmp-admin@fpb.local"
+snmp_location                       : "Cisco RTP Building 4, Lab 141A, AC10"
+
+# PROJECT PREFIX
+# Prefix represents the project id added to the pool/policy/profile names to identify and pool info
+# Example Project IDs for CVDs: FSVa, FSBa, FPVa, FPBa, (Infra: Rack-Ia); 'a' for Ansible
+prefix                : "FPB-ANS"
+
+# PROTOCOLS
+# OS stack
+configure_openshift   : "true"
+configure_vmware      : "false"
+
+# Configure Local Boot policies and profiles only when this value is true
+configure_local_boot  : "true"   # when using local boot
+
+# Configure iSCSI policies and profiles only when this value is true
+configure_iscsi_boot  : "false"   # when using iSCSI boot
+configure_iscsi       : "true"    # when using iSCSI storage but not iSCSI SAN boot
+configure_nvme_tcp    : "true"    # when using NVMe-TCP storage but not for booting
+
+# Configure Fibre Channel policies and profiles only when this value is true
+configure_fc_boot     : "false"   # when using FC boot
+configure_fc          : "false"   # when using FC storage but not FC SAN boot
+
+# Configure Fibre Channel NVMe vHBAs; only when this value true
+configure_fc_nvme     : "false"
+
+# Configure NFS; only when this value true
+configure_nfs     : "true"
+
+# Configure S3-compatible object store; only when this value true
+configure_s3_obj     : "true"
+
+# Boot Options (LB - Local Boot, iSCSI, FC, NVMe )
+boot_method: "LB"
+
+# VLANs
+#
+# Storage VLANs
+# Assumes native_vlan as True or False across all links which isn't always the case
+storage_vlans:
+  - name: "{{ prefix }}-iSCSI-A_VLAN"
+    id: 3015
+    description: "iSCSI Primary Path A VLAN"
+    type: "iSCSI" 
+    native_vlan: False      
+    path_type: "A"  #Primary Path
+  - name: "{{ prefix }}-iSCSI-B_VLAN"
+    id: 3025
+    description: "iSCSI Secondary Path B VLAN"
+    type: "iSCSI"     
+    native_vlan: False     
+    path_type: "B"  #Secondary Path
+  - name: "{{ prefix }}-NVMe-TCP-A_VLAN" 
+    id: 3035
+    description: "NVMe-TCP Primary Path A VLAN"
+    type: "NVMe-TCP"
+    native_vlan: False   
+    path_type: "A"  #Primary Path
+  - name: "{{ prefix }}-NVMe-TCP-B_VLAN"
+    id: 3045
+    description: "NVMe-TCP Primary Path B VLAN"
+    type: "NVMe-TCP"
+    native_vlan: False  
+    path_type: "B"  #Secondary Path
+  - name: "{{ prefix }}-NFS_VLAN"
+    id: 3055
+    description: "NFS VLAN"
+    type: "NFS"
+    native_vlan: False  
+  - name: "{{ prefix }}-S3-OBJ_VLAN"
+    id: 1209
+    description: "S3-compatible Object Store VLAN"
+    type: "S3"
+    native_vlan: False  
+#
+# All other VLANs including In-Band Management, Cluster Management etc. 
+# Assumes native_vlan as True or False across all links which isn't always the case
+other_vlans: 
+  - name: "Native_VLAN"
+    id: 2
+    description: "Native VLAN" 
+    type: "NATIVE"
+    native_vlan: True
+  - name: "{{ prefix }}-IB-MGMT_VLAN"  
+    id: 1201
+    description: "In-Band Management VLAN or BMC/CIMC VLAN" 
+    type: "MGMT"
+    native_vlan: False  
+  - name: "{{ prefix }}-CLUSTER-MGMT_VLAN" 
+    id: 1202
+    description: "OpenShift Cluster Management VLAN"
+    type: "MGMT"
+    native_vlan: False  
+
+
+# Note: VLANs can be aggregated as follows in the play/task or domain-specific vars
+# all_network_vlans: "{{ storage_vlans + other_vlans }}"
+

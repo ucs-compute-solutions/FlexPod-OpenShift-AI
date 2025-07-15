@@ -1,6 +1,6 @@
 ---
 # -------------------------------------------------------------------------------------
-#  Pre-requisites: Create Intersight Resource Group for FlashStack VSI cluster
+#  Pre-requisites: Create Intersight Resource Group for Baremetal cluster
 # -------------------------------------------------------------------------------------
 
 - name: Define anchor for Intersight API login info

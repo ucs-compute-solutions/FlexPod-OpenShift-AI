@@ -1,0 +1,96 @@
+---
+# Role variables as per NetApp's prescriptive guidance
+# This can be overridden by a var-file.yml at the command line
+# User's input variables
+
+##################################################################################################################################################
+# Cluster specific variables
+##################################################################################################################################################
+
+#Name of the ONTAP Cluster
+cluster_name: AA02-C800
+
+#Location of the ONTAP Cluster
+cluster_location: "{{ snmp_location }}"
+
+#Cluster management LIF already exists (pre-requisite), so note down name of cluster management LIF and enter below.
+cluster_mgmt_interface: cluster_mgmt
+
+#ONTAP Licensing Format
+#Note: ONTAP 9.10.1 and later for FAS/AFF storage systems uses a new file-based licensing solution known as NetApp License File, or NLF. Prior versions of ONTAP used 28-character keys called as legacy license keys.
+ontap_license_key_format:  #Options are "legacy" and "NLF"
+#  - legacy
+  - NLF
+
+#List the Legacy License Keys for the different features that you need
+legacy_license_keys:
+#  - License-Key-1
+#  - License-Key-2
+#  - License-Key-3
+
+#Path to NetApp License File (NLF)
+nlf_filepath:
+#  - "/root/license/EvalNLF-data-license.txt"
+#  - "/root/license/EvalNLF-encryption-license.txt"
+#  - "/root/license/EvalNLF-hybrid-license.txt"
+#  - "/root/license/EvalNLF-NVMe-license.txt"
+
+#Details for configuring NetApp AutoSupport
+autosupport_vars:
+  mail_hosts: 10.102.1.150
+  proxy_url: #Optional: If authentication is used, use format: "username:password@host:port"
+  from_address: "aa02-c800@fpb.local"
+  to_addresses: "{{ snmp_contact }}"
+
+#FIPS Mode on the ONTAP Cluster. By default, SSL on ONTAP is set with FIPS compliance disabled. Set this to "true" if you want to enable FIPS-compliant mode for the cluster
+is_fips_enabled: true
+
+#SNMP related variables
+enable_snmp: "{{ configure_snmpv3 }}"
+#Please make sure to fill out the below details if you have chosen to enable SNMP, leaving it empty will cause the setup to fail
+snmp_contact_info: "{{ snmp_contact }}"
+snmp_location_info: "{{ snmp_location }}"
+traphost_ip: "10.102.0.94"  #An SNMPv1 traphost is non-compliant to FIPS. You can only configure SNMPv1 traps if "is_fips_enabled" is set to false. Modify this value if Cluster FIPS mode is disabled
+snmp_community: "public"  #Update this field only if "is_fips_enabled" is set to false. SNMPv1 and SNMPv2c are enabled after you create an SNMP community. SNMPv1 and SNMPv2c are not supported when cluster FIPS mode is enabled
+
+#SNMPv3 related variables
+snmpv3_user: "{{ snmp_user_name }}"   #The name of the SNMPv3 user to manage
+snmpv3_auth_protocol: sha   #Authentication protocol for the snmp user (Choices: none, md5, sha, sha2_256). If "is_fips_enabled" is set to true, the options are 'sha' and 'sha2_256'. SNMPv3 user with none or MD5 as authentication protocol is non-compliant to FIPS
+snmpv3_auth_password: "{{ snmp_auth_password }}"   #Password for the authentication protocol. This is required for ‘md5’, ‘sha’ and ‘sha2_256’ authentication protocols and not required for ‘none’
+snmpv3_priv_protocol: aes128   #Privacy protocol for the snmp user (Choices: none, des, aes128). When cluster FIPS mode is on (is_fips_enabled: true), ‘aes128’ is the only possible and valid value. SNMPv3 user with none or DES as encryption protocol is non-compliant to FIPS
+snmpv3_priv_password: "{{ snmp_priv_password }}"   #Password for the privacy protocol. This is required for ‘des’ and ‘aes128’ privacy protocols and not required for ‘none’
+
+#Cluster Login banner Text message
+cluster_login_banner: Access restricted to authorized users
+
+##################################################################################################################################################
+# Node/ Controller level information
+##################################################################################################################################################
+
+ha_pairs:
+  - ha_no: 1
+    node_port_count: "2"
+    node_data_ports: ["e3a","e3b"]
+    node_fcp_ports: ["2a","2b","2c","2d"]
+    fcp_port_speed: "32"
+    node_specs:
+    - node_name: AA02-C800-01
+      sp: {ip: 10.102.0.48, mask: 255.255.255.0, gateway: 10.102.0.254}
+      data_aggregates:
+        - {aggr_name: AA02_C800_01_SSD_CAP_1, diskcount: 15}
+    - node_name: AA02-C800-02
+      sp: {ip: 10.102.0.49, mask: 255.255.255.0, gateway: 10.102.0.254}
+      data_aggregates:
+        - {aggr_name: AA02_C800_02_SSD_CAP_1, diskcount: 15}
+
+##################################################################################################################################################
+# Default/Best Practice related information - Change only if required
+##################################################################################################################################################
+
+#Following variable is used in a task to ensure auto revert for cluster management LIF is set to True.
+cluster_mgmt_auto_revert: true
+
+#Name of the Interface group
+ifgrp_name: a0a   #Do not change the ifgrp name a0a here, as this name is automatically selected during ifgrp creation via ONTAP REST API
+
+ifgrp_mode: multimode_lacp

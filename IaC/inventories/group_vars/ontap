@@ -1,0 +1,9 @@
+# This variable file is used by the playbooks for the ontap
+# These don't have to be explicitly imported by the var_files: they are autopopulated
+
+# !!! Sensitive Data should be encrypted using Ansible Vault. 
+# Variables should be put in vault file and use name that starts with 'vault_'
+
+# Credentials for connecting to the ONTAP cluster
+username: admin
+password: "{{ vault_ontap_password }}"

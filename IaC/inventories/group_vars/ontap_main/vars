@@ -1,0 +1,84 @@
+---
+# Role variables as per NetApp's prescriptive guidance
+# This can be overridden by a var-file.yml at the command line
+# User's input variables
+
+# !!! Sensitive Data should be encrypted using Ansible Vault. 
+# Variables should be put in vault file and use name that starts with 'vault_'
+
+##################################################################################################################################################
+# Node/ Controller level information
+#
+# Note that cluster specific initial configurations are done as part of Base FlexPod setup
+##################################################################################################################################################
+
+ha_pairs:
+  - ha_no: 1
+    node_port_count: "2"  #No. of data ports per node
+    node_specs:
+    - node_name: AA02-C800-01
+      data_aggregates:
+        - {aggr_name: AA02_C800_01_SSD_CAP_1}
+      nfs_lifs: {name: nfs-lif-01, address: 192.168.55.51, netmask: 255.255.255.0}  #Fill out this value only if nfs will be mentioned under allowed_protocols in tenant_specs
+      s3_lifs: {name: s3-lif-01, address: 10.102.9.51, netmask: 255.255.255.0}  #Fill out this value only if s3 will be mentioned under allowed_protocols in tenant_specs
+      iscsi_lifs:  #Fill out this value only if iscsi will be mentioned under allowed_protocols in tenant_specs. Provide one iSCSI LIF per iSCSI VLAN
+        - {name: iscsi-lif-01a, address: 192.168.15.51, netmask: 255.255.255.0, fabric: A}  #Do not change the fabric ID
+        - {name: iscsi-lif-01b, address: 192.168.25.51, netmask: 255.255.255.0, fabric: B}  #Do not change the fabric ID
+      nvme_tcp_lifs:  #Fill out this value only if nvme will be mentioned under allowed_protocols in tenant_specs. Provide one NVMe/TCP LIF per NVMe/TCP VLAN
+        - {name: nvme-tcp-lif-01a, address: 192.168.35.51, netmask: 255.255.255.0, fabric: A}  #Do not change the fabric ID
+        - {name: nvme-tcp-lif-01b, address: 192.168.45.51, netmask: 255.255.255.0, fabric: B}  #Do not change the fabric ID
+    - node_name: AA02-C800-02
+      data_aggregates:
+        - {aggr_name: AA02_C800_02_SSD_CAP_1}
+      nfs_lifs: {name: nfs-lif-02, address: 192.168.55.52, netmask: 255.255.255.0}  #Fill out this value only if nfs will be mentioned under allowed_protocols in tenant_specs
+      s3_lifs: {name: s3-lif-02, address: 10.102.9.52, netmask: 255.255.255.0}  #Fill out this value only if s3 will be mentioned under allowed_protocols in tenant_specs
+      iscsi_lifs:  #Fill out this value only if iscsi will be mentioned under allowed_protocols in tenant_specs. Provide one iSCSI LIF per iSCSI VLAN
+        - {name: iscsi-lif-02a, address: 192.168.15.52, netmask: 255.255.255.0, fabric: A}  #Do not change the fabric ID
+        - {name: iscsi-lif-02b, address: 192.168.25.52, netmask: 255.255.255.0, fabric: B}  #Do not change the fabric ID
+      nvme_tcp_lifs:  #Fill out this value only if nvme will be mentioned under allowed_protocols in tenant_specs. Provide one NVMe/TCP LIF per NVMe/TCP VLAN
+        - {name: nvme-tcp-lif-02a, address: 192.168.35.52, netmask: 255.255.255.0, fabric: A}  #Do not change the fabric ID
+        - {name: nvme-tcp-lif-02b, address: 192.168.45.52, netmask: 255.255.255.0, fabric: B}  #Do not change the fabric ID
+
+##################################################################################################################################################
+#Tenant/ SVM specific variables
+##################################################################################################################################################
+
+tenant_specs:
+  ipspace: "AC10-OCP"  #IPspace creation
+  svm_name: "AC10-OCP-SVM"
+  allowed_protocols:  #Provide the values in lower case only, supported options for this solution are nfs, iscsi, nvme, and s3
+    - nfs             #For NVMe/TCP config, use nvme
+    - iscsi
+    - nvme
+    - s3
+  client_match: 192.168.55.0/24
+  data_protocol: nfs
+  s3_service: AC10-OCP-S3     #Name of the S3 service. This will be used for S3 Object store server name
+  s3_user: s3-user            #Name of the S3 user
+  s3_group: s3-group          #Name of the S3 group
+  s3_service_policy: oai-data-s3       #Name of the S3 service policy. This will be used for creating S3 data LIFs
+  s3_bucket_specs:          #S3 bucket specifications
+    - {name: model-repo, size: 1099511627776}      #Provide S3 bucket size in bytes
+    - {name: pipeline-artifacts, size: 1099511627776}
+  dns_server_svm:
+    - "{{ dns_servers[0] }}"
+    - "{{ dns_servers[1] }}"
+  dns_domain_svm: "{{ domain_name }}"
+  vsadmin_password: "{{ vault_ontap_password }}"
+  svm_login_banner: "This AC10-OCP-SVM is reserved for authorized users only!"
+  audit_log_volume_specs: {name: audit_log, size: 50, residing_aggr: AA02_C800_01_SSD_CAP_1}
+  svm_mgmt_lif: {lif_name: svm-mgmt, address: 10.120.1.50, netmask: 255.255.255.0, gateway: 10.120.1.254, home_node: AA02-C800-01}
+
+##################################################################################################################################################
+# Default/Best Practice related information - Change only if required
+##################################################################################################################################################
+
+#Name of the Interface group
+ifgrp_name: a0a   #Do not change the ifgrp name a0a here, as this name is automatically selected during ifgrp creation via ONTAP REST API
+
+#Job Schedule
+job_schedule:
+  - {job_name: 15min-OCP, job_minutes: [0,15,30,45]}  #For creating 15-min interval job schedule, few examples would be [0,15,30,45], [5,20,35,50], [7,22,37,52]. Update as required for your environment
+
+#Text sent in the subject line of the AutoSupport message
+autosupport_message: "FlexPod ONTAP Storage Configuration for the OpenShift Tenant completed"

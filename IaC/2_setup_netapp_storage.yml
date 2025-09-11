@@ -1,0 +1,33 @@
+---
+#Execute the below ONTAP Role after Nexus playbook
+- name: Configure ONTAP Base Setup
+  hosts: ontap
+  gather_facts: False
+  vars_files:
+    - inventories/group_vars/all/vars
+    - inventories/group_vars/ontap_base/vars
+  connection: local
+  roles:
+  - { role: ontap/ontap_base_primary_setup, tags: [ 'ontap_base_primary_setup' ] }
+  - { role: ontap/ontap_base_network, tags: [ 'ontap_base_network' ] }
+  tags:
+  - ontap_base_config
+  - flexpod_base_config
+
+#Execute the below ONTAP Role after ONTAP Base Setup
+- name: Configure ONTAP for FlexPod
+  hosts: ontap
+  gather_facts: False
+  vars_files:
+    - inventories/group_vars/all/vars
+    - inventories/group_vars/ontap_main/vars
+  connection: local
+  roles:
+  - { role: ontap/ontap_main_network, tags: [ 'ontap_main_network' ] }
+  - { role: ontap/ontap_main_svm, tags: [ 'ontap_main_svm' ] }
+  - { role: ontap/ontap_main_volumes, tags: [ 'ontap_main_volumes' ] }
+  - { role: ontap/ontap_main_lifs, tags: [ 'ontap_main_lifs' ] }
+  - { role: ontap/ontap_main_finalize_setup, tags: [ 'ontap_main_finalize_setup' ] }
+  tags:
+  - ontap_main_config
+  - flexpod_main_config

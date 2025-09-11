@@ -1,0 +1,35 @@
+---
+# Create ifgroups for the 10G interfaces
+- name: Create multimode/ LACP interface groups and add data ports
+  netapp.ontap.na_ontap_net_ifgrp:
+    state: present
+    mode: "{{ifgrp_mode}}"
+    distribution_function: port
+    node: "{{item.1.node_name}}"
+    port: "{{item.0.node_data_ports}}"
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  with_subelements:
+    - "{{ ha_pairs }}"
+    - node_specs
+  tags:
+    - ontap_configure_ifgrp
+
+# Modify the MTU of the data ifgroup to 9000
+- name: Modify the MTU of the data ifgroup to 9000
+  netapp.ontap.na_ontap_rest_cli:
+    command: 'network/port/objects/{{item.node_name}}/{{ifgrp_name}}'
+    verb: 'PATCH'
+    body: {'mtu': '9000'}
+    hostname: "{{inventory_hostname}}"
+    username: "{{username}}"
+    password: "{{password}}"
+    https: true
+    validate_certs: false
+  with_items:
+    - "{{ ha_pairs | map(attribute='node_specs') | flatten }}"
+  tags:
+    - ontap_ifgroup_mtu
